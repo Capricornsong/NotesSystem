@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:tools="http://schemas.android.com/tools"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" xmlns:app="http://schemas.android.com/apk/res-auto"
+                tools:context="cn.edu.bnuz.notes.MainActivity"
+                android:background="@color/app_color_blue"
+                android:fitsSystemWindows="true">
+
+    <com.qmuiteam.qmui.widget.QMUITopBar
+            android:id="@+id/top_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/app_color_blue"
+            android:fitsSystemWindows="true"
+            android:layout_weight="2"
+            app:qmui_topbar_title_color="@color/tab_panel_bg"
+    >
+    </com.qmuiteam.qmui.widget.QMUITopBar>
+
+    <androidx.viewpager.widget.ViewPager
+            android:id="@+id/fragment_vp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/tab_panel_bg"
+            android:layout_below="@+id/top_bar"
+            android:layout_above="@+id/tabs_rg"
+/>
+    <RadioGroup
+            android:id="@+id/tabs_rg"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_alignParentBottom="true"
+            android:orientation="horizontal">
+        <RadioButton
+                android:id="@+id/note_tab"
+                style="@style/Custom.TabRadioButton"
+                android:checked="true"
+                android:drawableTop="@drawable/tab_note_selector"
+                android:text="笔记"/>
+
+        <RadioButton
+                android:id="@+id/tree_tab"
+                style="@style/Custom.TabRadioButton"
+                android:drawableTop="@drawable/tab_tree_selector"
+                android:text="知识树"/>
+
+        <RadioButton
+                android:id="@+id/user_tab"
+                style="@style/Custom.TabRadioButton"
+                android:drawableTop="@drawable/tab_user_selector"
+                android:text="个人中心"/>
+    </RadioGroup>
+
+</RelativeLayout>

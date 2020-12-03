@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:tools="http://schemas.android.com/tools"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" xmlns:app="http://schemas.android.com/apk/res-auto"
+                tools:context=".fragment_navigation.NotesFragment"
+                android:fitsSystemWindows="true">
+    <ListView
+        android:id="@+id/listview_contact"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/qmui_config_color_white"/>
+
+            <ImageButton
+                    android:id="@+id/create_notes"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="@null"
+                    android:contentDescription="@null"
+                    android:src="@mipmap/notes_create"
+                    android:layout_alignParentBottom="true"
+                    android:layout_alignParentRight="true"/>
+
+</RelativeLayout>

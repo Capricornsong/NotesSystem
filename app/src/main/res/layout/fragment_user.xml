@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+             xmlns:tools="http://schemas.android.com/tools"
+             android:layout_width="match_parent"
+             android:layout_height="match_parent" xmlns:app="http://schemas.android.com/apk/res-auto"
+             tools:context=".fragment_navigation.UserFragment">
+
+        <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="150dp"
+                android:id="@+id/user"
+
+                >
+        <ImageView
+                android:id="@+id/user_img"
+                android:layout_height="100dp"
+                android:layout_width="100dp"
+                android:src="@mipmap/users_img"
+                android:layout_centerVertical="true"
+                />
+         <TextView android:layout_width="wrap_content"
+                   android:layout_height="wrap_content"
+                   android:text="用户名"
+                   android:layout_toRightOf="@id/user_img"
+                   android:layout_centerVertical="true"
+                   android:layout_marginLeft="25dp"
+         />
+            <ImageButton
+                    android:id="@+id/user_come"
+                    android:layout_height="wrap_content"
+                    android:layout_width="wrap_content"
+                    android:src="@mipmap/users_come"
+                    android:layout_centerVertical="true"
+                    android:layout_alignParentRight="true"
+            />
+        </RelativeLayout>
+        <com.qmuiteam.qmui.widget.grouplist.QMUICommonListItemView
+                android:id="@+id/user_notes"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:qmui_accessory_type="chevron"
+                app:qmui_orientation="vertical"
+                app:qmui_common_list_title_color="@color/qmui_s_link_color"
+                app:qmui_common_list_detail_color="@color/qmui_config_color_red"
+                android:layout_below="@id/user"
+                android:layout_marginTop="30dp"
+                android:background="@color/app_color_blue_3_pressed"
+        />
+</RelativeLayout>
