@@ -40,7 +40,6 @@ public class NoteService extends Service {
             }else if ("com.bnuz.noteservice.ACTION_FILETRANS_CONTROLLER".equals(action)){
                 return new FileTransImpl();
             }
-
         }
         return null;
     }

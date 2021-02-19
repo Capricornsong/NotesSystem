@@ -178,6 +178,7 @@ public class Notes_Edit extends Activity {
                                     @Override
                                     public void run() {
                                         Looper.prepare();
+
                                         long result = mNoteController.CreateNote(note);
                                         Log.d(TAG, "run: 新建笔记结果码：:" + result);
                                         if (result > 9999999) {
@@ -203,6 +204,7 @@ public class Notes_Edit extends Activity {
                                             Toast.makeText(Notes_Edit.this,"已上传至云端",Toast.LENGTH_LONG).show();
                                         }
                                         else if (result == 201){
+                                            //无网络时。具体笔记存储逻辑在CreateNote()方法中
                                             Toast.makeText(Notes_Edit.this,"上传失败，已保存在本地",Toast.LENGTH_LONG).show();
                                         }
                                         else {

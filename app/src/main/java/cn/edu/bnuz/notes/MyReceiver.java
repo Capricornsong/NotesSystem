@@ -39,7 +39,7 @@ public class MyReceiver extends BroadcastReceiver {
             Log.d(TAG, "onReceive: token:" + Token.token);
             Toast.makeText(context,"网络已连接",Toast.LENGTH_LONG).show();
         }
-        else if (mNetworkInfo != null && mNetworkInfo.isAvailable() && Token.token.equals("")){
+        else if (mNetworkInfo != null && mNetworkInfo.isAvailable() && !Token.token.equals("")){
             Toast.makeText(context,"网络已连接,正在尝试同步笔记",Toast.LENGTH_LONG).show();
             //上传本地数据库中未上传的笔记
             SynNote();
@@ -55,7 +55,13 @@ public class MyReceiver extends BroadcastReceiver {
         //新创建在本地的笔记
         List<Note> notes = LitePal.where("isSyn = ?","0").find(Note.class);
         //批量上传为同步笔记
-        uploadNotes(notes);
+        threadExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                uploadNotes(notes);
+            }
+        });
+
 //        for(Note note : notes){
 //            Log.d(TAG, "IsSyn:" + note.getIsSyn() + " noteid:" + note.getNoteId());
 //        }
@@ -63,6 +69,7 @@ public class MyReceiver extends BroadcastReceiver {
 
     public void uploadNotes(List<Note> notes){
         for(Note note : notes){
+            //获取本地创建的未上传的新笔记
             Log.d(TAG, "IsSyn:" + note.getIsSyn() + " notetitle:" + note.getTitle());
             RxHttp.postJson("/note")
                     .setSync()
@@ -78,16 +85,19 @@ public class MyReceiver extends BroadcastReceiver {
                             Log.d(TAG, "CreateNote: content --> " + c.getObject().getGmtModified().toString());
 
                             Note updateNews = new Note();
+                            //表示已经同步
                             updateNews.setIsSyn(1);
+                            updateNews.setUserId(c.getObject().getUserId());
                             updateNews.setNoteId(c.getObject().getNoteId());
                             updateNews.setGmt_modified(c.getObject().getGmtModified());
-                            updateNews.setVersion(c.getObject().getVersion());
+
+                            updateNews.setVersion(1);
                             updateNews.setGmt_create(c.getObject().getGmtModified());
                             //用上传成功的返回值更新本地的笔记
-                            updateNews.updateAll("IsSyn = ? and content = ?","0",c.getObject().getContent());
+                            updateNews.updateAll("IsSyn = ? and content = ?","0",c.getObject().getHtmlContent());
                         }
                     },throwable -> {
-                        Log.d("CreateNote", "创建文本笔记失败" + throwable);
+                        Log.d(TAG + "uploadNotes", "创建文本笔记失败" + throwable);
                     });
         }
 //        Note updateNews = new Note();

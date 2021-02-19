@@ -117,6 +117,7 @@ public class NotesFragment extends Fragment {
             Thread thread = new Thread(new Runnable() {
                 @Override
                 public void run() {
+                    //过去笔记列表
                     NotesbyPageorTagIdRD.NotesPkg notesPkg = mNoteController.GetNotesbyPage();
                     Log.d(TAG, "run: ///////////////////");
                     Lnotes.addAll(notesPkg.getNotes());
@@ -125,7 +126,7 @@ public class NotesFragment extends Fragment {
 
             thread.start();
             try {
-                thread.join();
+                thread.join();      //待线程运行完再往下执行
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -203,6 +204,7 @@ public class NotesFragment extends Fragment {
                     note.setNoteId(mNote.getNoteId());
                     note.setVersion(mNote.getVersion());
                     note.setUserId(mNote.getUserId());
+                    note.setIsSyn(1);
                     for (String path : mFilespPath){
                         Log.d(TAG, "onItemClick: path:" + path);
                     }
@@ -232,8 +234,9 @@ public class NotesFragment extends Fragment {
                     //
                     startActivity(intent);
                 }
+                //无网络时
                 else{
-                    //无网络时
+
                     bundle.putString("title",mNotelist.get(i).getTitle());
                     bundle.putString("htmlcontent",mNotelist.get(i).getHtmlContent());
                     intent.putExtras(bundle);

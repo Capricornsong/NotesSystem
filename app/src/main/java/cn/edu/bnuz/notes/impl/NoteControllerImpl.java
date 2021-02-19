@@ -102,7 +102,7 @@ public class NoteControllerImpl extends Binder implements INoteController{
                             responseCode.set(c.getCode());
 
                     },throwable -> {
-                        Log.d("CreateNote", "创建文本笔记失败" + throwable);
+                        Log.d(TAG + "CreateNote", "创建文本笔记失败" + throwable);
                     });
 
             return responseCode.get();

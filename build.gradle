@@ -2,12 +2,14 @@
 
 buildscript {
     repositories {
-        maven {
-            url 'https://maven.google.com/'
-            name 'Google'
-        }
+//        maven {
+//            url 'https://maven.google.com/'
+//            name 'Google'
+//        }
+        //google太卡，mavenURL改为国内镜像
+        maven{ url 'https://maven.aliyun.com/nexus/content/groups/public/'}
         mavenCentral()
-        jcenter(){ url 'https://jcenter.bintray.com/'}
+        jcenter(){ url '//https://jcenter.bintray.com/'}
         google()
     }
     dependencies {
@@ -21,12 +23,14 @@ buildscript {
 allprojects {
     repositories {
         jcenter()
-        maven {
-            url 'https://maven.google.com/'
-            name 'Google'
-        }
+//        maven {
+//            url 'https://maven.google.com/'
+//            name 'Google'
+//        }
+        //google太卡，mavenURL改为国内镜像
+        maven{ url 'https://maven.aliyun.com/nexus/content/groups/public/'}
         mavenCentral()
-        jcenter(){ url 'https://jcenter.bintray.com/'}
+        jcenter(){ url '//https://jcenter.bintray.com/'}
         maven { url 'https://jitpack.io' }
         google()
 
