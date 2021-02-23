@@ -66,7 +66,7 @@ public class NotesFragment extends Fragment {
     @BindView(R.id.listview_contact)
     ListView mListView_contact;
     private NotesAdapter mNotesAdapter;
-    private List<NotesbyPageorTagIdRD.NotesPkg.Notes> Lnotes=new ArrayList<>();
+    public List<NotesbyPageorTagIdRD.NotesPkg.Notes> Lnotes=new ArrayList<>();
     private String TAG ="NF";
 
     private final List<Note> mNotelist = LitePal.findAll(Note.class);       //用于存储从本地获取的笔记
@@ -230,6 +230,8 @@ public class NotesFragment extends Fragment {
 //                    Log.d(TAG, "onItemClick: String.valueOf(mNote.getNoteId()):" + String.valueOf(mNote.getNoteId()));
                     bundle.putString("title",note.getTitle());
                     bundle.putString("htmlcontent",note.getHtmlContent());
+                    bundle.putLong("noteid",mNote.getNoteId());
+
                     intent.putExtras(bundle);
                     //
                     startActivity(intent);

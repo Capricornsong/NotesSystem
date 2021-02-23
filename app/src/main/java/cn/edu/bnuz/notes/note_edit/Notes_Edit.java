@@ -191,7 +191,6 @@ public class Notes_Edit extends Activity {
 //                              Document doc = Jsoup.parseBodyFragment(html);
 //                              Element body = doc.body();
 
-
                                 threadExecutor.execute(new Runnable() {
                                     @Override
                                     public void run() {

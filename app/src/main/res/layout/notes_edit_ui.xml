@@ -294,6 +294,7 @@
 
         </LinearLayout>
     </HorizontalScrollView>
+
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/create_notes"
         android:layout_width="wrap_content"
@@ -301,7 +302,7 @@
         android:layout_margin="16dp"
         android:layout_above="@+id/buttonIist"
         android:layout_alignParentRight="true"
-        app:srcCompat="@drawable/create"
         android:backgroundTint="@color/app_color_blue"
+        app:srcCompat="@drawable/create"
         tools:ignore="NotSibling" />
 </RelativeLayout>

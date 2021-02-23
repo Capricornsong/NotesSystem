@@ -23,6 +23,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.qmuiteam.qmui.QMUILog;
 import com.qmuiteam.qmui.skin.QMUISkinManager;
 import com.qmuiteam.qmui.util.QMUIStatusBarHelper;
@@ -57,7 +58,7 @@ public class  notes_show extends Activity {
     @BindView(R.id.richeditor1)
     RichEditor mEditor;
     @BindView(R.id.preview1)
-    TextView mPreview;
+    TextView mPreview_show;
     @BindView(R.id.action_undo1)
     ImageButton undo;
     @BindView(R.id.action_redo1)
@@ -118,8 +119,11 @@ public class  notes_show extends Activity {
     ImageButton insert_audio;
     @BindView(R.id.top_bar_notes1)
     QMUITopBar NotesTopBar;
-    @BindView(R.id.title1)
+    @BindView(R.id.title_show)
     EditText title_show;
+    @BindView(R.id.save_notes)
+    FloatingActionButton save_note;
+
     private String TAG = "Notes_Show";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -135,6 +139,8 @@ public class  notes_show extends Activity {
         Intent intent = getIntent();
         String htmlcontent = intent.getStringExtra("htmlcontent");
         String title = intent.getStringExtra("title");
+        Long noteid = intent.getLongExtra("noteid",0L);
+        String html = mPreview_show.getText().toString();
         mEditor.setHtml(htmlcontent);
         Log.d(TAG,"htmlcontent:"+  htmlcontent);
         title_show.setText(title);
@@ -146,163 +152,159 @@ public class  notes_show extends Activity {
                 overridePendingTransition(R.anim.slide_still, R.anim.slide_out_right);
             }
         });
-        //完成按钮
-        NotesTopBar.addRightImageButton(R.drawable.create,R.layout.notes_edit_ui).setOnClickListener(new View.OnClickListener() {
+        //分享按钮
+        NotesTopBar.addRightImageButton(R.mipmap.share,R.layout.notes_edit_ui).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                final QMUIDialog.EditTextDialogBuilder builder = new QMUIDialog.EditTextDialogBuilder(notes_show.this);
-                builder.setTitle("TAG")
-                        .setSkinManager(QMUISkinManager.defaultInstance(getContext()))
-                        .setPlaceholder("在此输入您的TAG")
-                        .setInputType(InputType.TYPE_CLASS_TEXT)
-                        .addAction("暂不添加TAG", new QMUIDialogAction.ActionListener() {
-                            @Override
-                            public void onClick(QMUIDialog dialog, int index) {
-                                dialog.dismiss();
-//                              String html1 = "111<img src=\"/storage/emulated/0/Download/create.png\" alt=\"/storage/emulated/0/Download/create.png\" style=\"max-width:75%\"><img src=\"/storage/emulated/0/Download/create.png\" alt=\"/storage/emulated/0/Download/create.png\" style=\"max-width:75%\">";
-                                Toast.makeText(notes_show.this,"正在上传至云端",Toast.LENGTH_SHORT).show();
-                                String html = mPreview.getText().toString();
+
+            }
+        });
+        //保存按钮
+        save_note.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+//              String html1 = "111<img src=\"/storage/emulated/0/Download/create.png\" alt=\"/storage/emulated/0/Download/create.png\" style=\"max-width:75%\"><img src=\"/storage/emulated/0/Download/create.png\" alt=\"/storage/emulated/0/Download/create.png\" style=\"max-width:75%\">";
+
+                System.out.println("htmlcontent:" + htmlcontent);
+                System.out.println("html:" + mPreview_show.getText().toString());
+                System.out.println("title_show:" + title_show.getText().toString());
+                System.out.println("title" + title);
+
+
+                //判断是否有编辑过
+                if (html.equals("") && title_show.getText().toString().equals(title)) {
+                    finish();
+                }
+                else{
+                    Toast.makeText(notes_show.this,"修改正在上传至云端",Toast.LENGTH_SHORT).show();
+                    Document doc = Jsoup.parseBodyFragment(html);
+                    Element body = doc.body();
+                    Note note = new Note();
+                    note.setTitle(title_show.getText().toString());
+//              note.setHtmlContent(mPreview.getText().toString());
+                    note.setContent(body.text());
+                    note.setHtmlContent(html);
+//              note.setUserId(888888888);
+//              List<File> images = new ArrayList<>();
+//              String html = mPreview.getText().toString();
+//              Document doc = Jsoup.parseBodyFragment(html);
+//              Element body = doc.body();
+                    List<String> imagesUrl = new ArrayList<>();
+                    Elements img = doc.select("img");
+                    int imgsize = img.size();
+                    Log.d(TAG, "onClick: imgsize:" + imgsize);
+                    Thread thread = new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Looper.prepare();
+
+                            long result = mNoteController.CreateNote(note);
+                            Log.d(TAG, "run: 修改笔记结果码：:" + result);
+                            if (result > 9999999) {
+                                note.setNoteId(result);
+                                //准备待上传的文件list
+                                for (Element s : img) {
+                                    Log.d(TAG, "src:" + s.attr("src"));
+                                    File file = new File(s.attr("src"));
+                                    String url = mFileTransController.FileUpload(file,result);
+                                    Log.d(TAG, "run: filesuploadresult:" + url);
+                                    imagesUrl.add(url);
+                                }
+                                //得到urllist：imagesUrl
+                                for (int i = 0;i < imgsize;i++){
+                                    doc.select("img").get(i).attr("src",imagesUrl.get(i)).attr("alt",imagesUrl.get(i));
+                                }
+                                //得到替换完成的doc
+                                Log.d(TAG, "run: 替换完成的doc" + doc);
+                                note.setHtmlContent(doc.body().toString());
+                                //修改云端htmlcontent
+                                mNoteController.UpdateNoteHtmlContent(note);
+//                          mNoteController.UpdateNote(note);
+                                Toast.makeText(notes_show.this,"已上传至云端",Toast.LENGTH_LONG).show();
+                            }
+                            else if (result == 201){
+                                Toast.makeText(notes_show.this,"上传失败，已保存在本地",Toast.LENGTH_LONG).show();
+                            }
+                            else {
+                                Toast.makeText(notes_show.this,"保存失败",Toast.LENGTH_LONG).show();
+                            }
+                            Looper.loop();
+                        }
+                    });
+                    thread.start();
+                    try {
+                        thread.join();      //等待线程执行完
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
+                    threadExecutor.execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            Looper.prepare();
+                            long result = mNoteController.CreateNote(note);
+
+                            //即上传成功，result为noteid
+                            if (result > 9999999) {
+                                //准备待上传的文件list
+                                String html = mPreview_show.getText().toString();
                                 Document doc = Jsoup.parseBodyFragment(html);
-                                Element body = doc.body();
-                                Note note = new Note();
-                                note.setTitle("this is title");
-//                              note.setHtmlContent(mPreview.getText().toString());
-                                note.setContent(body.text());
-                                note.setHtmlContent(html);
-//                              note.setUserId(888888888);
-//                              List<File> images = new ArrayList<>();
-//                              String html = mPreview.getText().toString();
-//                              Document doc = Jsoup.parseBodyFragment(html);
-//                              Element body = doc.body();
-                                List<String> imagesUrl = new ArrayList<>();
+//                        Element body = doc.body();
                                 Elements img = doc.select("img");
-                                int imgsize = img.size();
-                                Log.d(TAG, "onClick: imgsize:" + imgsize);
-                                Thread thread = new Thread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        Looper.prepare();
-
-                                        long result = mNoteController.CreateNote(note);
-                                        Log.d(TAG, "run: 新建笔记结果码：:" + result);
-                                        if (result > 9999999) {
-                                            note.setNoteId(result);
-                                            //准备待上传的文件list
-                                            for (Element s : img) {
-                                                Log.d(TAG, "src:" + s.attr("src"));
-                                                File file = new File(s.attr("src"));
-                                                String url = mFileTransController.FileUpload(file,result);
-                                                Log.d(TAG, "run: filesuploadresult:" + url);
-                                                imagesUrl.add(url);
-                                            }
-                                            //得到urllist：imagesUrl
-                                            for (int i = 0;i < imgsize;i++){
-                                                doc.select("img").get(i).attr("src",imagesUrl.get(i)).attr("alt",imagesUrl.get(i));
-                                            }
-                                            //得到替换完成的doc
-                                            Log.d(TAG, "run: 替换完成的doc" + doc);
-                                            note.setHtmlContent(doc.body().toString());
-                                            //修改云端htmlcontent
-                                            mNoteController.UpdateNoteHtmlContent(note);
-//                                          mNoteController.UpdateNote(note);
-                                            Toast.makeText(notes_show.this,"已上传至云端",Toast.LENGTH_LONG).show();
-                                        }
-                                        else if (result == 201){
-                                            Toast.makeText(notes_show.this,"上传失败，已保存在本地",Toast.LENGTH_LONG).show();
-                                        }
-                                        else {
-                                            Toast.makeText(notes_show.this,"保存失败",Toast.LENGTH_LONG).show();
-                                        }
-                                        Looper.loop();
-                                    }
-                                });
-                                thread.start();
-                                try {
-                                    thread.join();      //等待线程执行完
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
+                                List<File> images = new ArrayList<>();
+                                for(Element s : img){
+                                    File file = new File(s.attr("src"));
+                                    images.add(file);
                                 }
 
-                                threadExecutor.execute(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        Looper.prepare();
-                                        long result = mNoteController.CreateNote(note);
-
-                                        //即上传成功，result为noteid
-                                        if (result > 9999999) {
-                                            //准备待上传的文件list
-                                            String html = mPreview.getText().toString();
-                                            Document doc = Jsoup.parseBodyFragment(html);
-//                            Element body = doc.body();
-                                            Elements img = doc.select("img");
-                                            List<File> images = new ArrayList<>();
-                                            for(Element s : img){
-                                                File file = new File(s.attr("src"));
-                                                images.add(file);
+                                int size = doc.select("img").size();
+                                int i;
+                                if (size != 0) {
+                                    for (i = 0; i < size; i++){
+                                        File file = new File(doc.select("img").get(i).attr("src"));
+                                        threadExecutor.execute(new Runnable() {
+                                            @Override
+                                            public void run() {
+//                             s.attr("src",mFileTransController.FileUpload(file,result));
+//                             Log.d(TAG, "run: filurl:" + mFileTransController.FileUpload(file,result));
+//                             doc.select("img").get(i).attr("src",mFileTransController.FileUpload(file,result));
                                             }
-
-                                            int size = doc.select("img").size();
-                                            int i;
-                                            if (size != 0) {
-                                                for (i = 0; i < size; i++){
-                                                    File file = new File(doc.select("img").get(i).attr("src"));
-                                                    threadExecutor.execute(new Runnable() {
-                                                        @Override
-                                                        public void run() {
-//                                            s.attr("src",mFileTransController.FileUpload(file,result));
-//                                            Log.d(TAG, "run: filurl:" + mFileTransController.FileUpload(file,result));
-//                                            doc.select("img").get(i).attr("src",mFileTransController.FileUpload(file,result));
-                                                        }
-                                                    });
-//                                    Log.d(TAG, "onCreate: img:" + s.attr("src"));
-//                                    doc.select("img").get(i).attr("src",doc2.select("img").get(i).attr("src"));
-                                                }
-
-
-                                                Log.d(TAG, "onCreate:" + doc);
-//                                List<Element> img1=doc1.select("img");
-
-//                                for(Element s : img){
-//                                    File file = new File(s.attr("src"));
-//                                    threadExecutor.execute(new Runnable() {
-//                                        @Override
-//                                        public void run() {
-////                                            s.attr("src",mFileTransController.FileUpload(file,result));
-//                                            Log.d(TAG, "run: filurl:" + mFileTransController.FileUpload(file,result));
-//                                        }
-//                                    });
-//                                    Log.d(TAG, "onCreate: img:" + s.attr("src"));
-//                                }
-                                            }
-
-                                            Toast.makeText(notes_show.this,"已上传至云端",Toast.LENGTH_LONG).show();
-                                        }
-                                        else if (result == 201){
-                                            Toast.makeText(notes_show.this,"上传失败，已保存在本地",Toast.LENGTH_LONG).show();
-                                        }
-                                        else {
-                                            Toast.makeText(notes_show.this,"保存失败",Toast.LENGTH_LONG).show();
-                                        }
-                                        Looper.loop();
+                                        });
+//                           TAG, "onCreate: img:" + s.attr("src"));
+//                                doc.select("img").get(i).attr("src",doc2.select("img").get(i).attr("src"));
                                     }
-                                });
-                            }
-                        })
-                        .addAction("确定", new QMUIDialogAction.ActionListener() {
-                            @Override
-                            public void onClick(QMUIDialog dialog, int index) {
-                                CharSequence text = builder.getEditText().getText();
-                                if (text != null && text.length() > 0) {
-                                    Toast.makeText(notes_show.this, "您的TAG为: " + text, Toast.LENGTH_SHORT).show();
-                                    dialog.dismiss();
-                                } else {
-                                    Toast.makeText(notes_show.this, "请填入TAG,如没有TAG请取消", Toast.LENGTH_SHORT).show();
-                                }
-                            }
-                        })
-                        .create(R.style.QMUI_Dialog).show();
 
+
+                                    Log.d(TAG, "onCreate:" + doc);
+//                            List<Element> img1=doc1.select("img");
+
+//                            for(Element s : img){
+//                                File file = new File(s.attr("src"));
+//                                threadExecutor.execute(new Runnable() {
+//                                    @Override
+//                                    public void run() {
+////                                        s.attr("src",mFileTransController.FileUpload(file,result));
+//                                        Log.d(TAG, "run: filurl:" + mFileTransController.FileUpload(file,result));
+//                                    }
+//                                });
+//                                Log.d(TAG, "onCreate: img:" + s.attr("src"));
+//                            }
+                                }
+
+                                Toast.makeText(notes_show.this,"已上传至云端",Toast.LENGTH_LONG).show();
+                            }
+                            else if (result == 201){
+                                Toast.makeText(notes_show.this,"上传失败，已保存在本地",Toast.LENGTH_LONG).show();
+                            }
+                            else {
+                                Toast.makeText(notes_show.this,"保存失败",Toast.LENGTH_LONG).show();
+                            }
+                            Looper.loop();
+                        }
+                    });
+                    finish();
+                }
 
 //                mEditor.setHtml("11111114<img src=\"/storage/emulated/0/Download/create.png\" alt=\"/storage/emulated/0/Download/create.png\" style=\"max-width:75%\">");
             }
@@ -317,7 +319,7 @@ public class  notes_show extends Activity {
         mEditor.setOnTextChangeListener(new RichEditor.OnTextChangeListener() {
             @Override
             public void onTextChange(String text) {
-                mPreview.setText(text);
+                mPreview_show.setText(text);
                 Log.d(TAG, "onTextChange: " + mEditor.getHtml());
             }
         });
