@@ -37,7 +37,9 @@
             android:layout_gravity="center"
             android:layout_marginTop="60dp"
             android:hint="账号"
-            android:textSize="20sp" />
+            android:textSize="20sp"
+            android:inputType="text"
+            android:lines="1"/>
     <!--输入框-->
     <EditText
             android:id="@+id/et_psw"
@@ -47,7 +49,8 @@
             android:layout_marginTop="10dp"
             android:hint="密码"
             android:textSize="20sp"
-            android:inputType="textPassword"/>
+            android:inputType="textPassword"
+            android:lines="1"/>
     <!--按钮-->
     <Button
             android:id="@+id/btn_login"

@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Looper;
@@ -11,6 +12,7 @@ import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -21,12 +23,15 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import cn.edu.bnuz.notes.R;
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.qmuiteam.qmui.skin.QMUISkinManager;
 import com.qmuiteam.qmui.util.QMUIStatusBarHelper;
 import com.qmuiteam.qmui.widget.QMUITopBar;
 import com.qmuiteam.qmui.widget.dialog.QMUIDialog;
 import com.qmuiteam.qmui.widget.dialog.QMUIDialogAction;
 import com.rxjava.rxlife.RxLife;
+import android.net.Uri;
+import android.database.Cursor;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -61,6 +66,8 @@ public class Notes_Edit extends Activity {
     TextView mPreview;
     @BindView(R.id.action_undo)
     ImageButton undo;
+    @BindView(R.id.editTitle)
+    EditText editTitle;
     @BindView(R.id.action_redo)
     ImageButton redo;
     @BindView(R.id.action_bold)
@@ -119,6 +126,8 @@ public class Notes_Edit extends Activity {
     ImageButton insert_audio;
     @BindView(R.id.top_bar_notes)
     QMUITopBar NotesTopBar;
+    @BindView(R.id.create_notes)
+    FloatingActionButton create_note;
     private String TAG = "Notes_Edit";
 
     @Override
@@ -139,8 +148,17 @@ public class Notes_Edit extends Activity {
                 overridePendingTransition(R.anim.slide_still, R.anim.slide_out_right);
             }
         });
+
+
+        //分享按钮
+        NotesTopBar.addRightImageButton(R.mipmap.share,R.layout.notes_edit_ui).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
         //完成按钮
-        NotesTopBar.addRightImageButton(R.drawable.create,R.layout.notes_edit_ui).setOnClickListener(new View.OnClickListener() {
+        create_note.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 final QMUIDialog.EditTextDialogBuilder builder = new QMUIDialog.EditTextDialogBuilder(Notes_Edit.this);
@@ -163,7 +181,7 @@ public class Notes_Edit extends Activity {
                                 int imgsize = img.size();
                                 Log.d(TAG, "onClick: imgsize:" + imgsize);
                                 Note note = new Note();
-                                note.setTitle("this is title");
+                                note.setTitle(editTitle.getText().toString());
 //                              note.setHtmlContent(mPreview.getText().toString());
                                 note.setContent(body.text());
                                 note.setHtmlContent(html);
@@ -552,7 +570,10 @@ public class Notes_Edit extends Activity {
         insert_video.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mEditor.insertVideo("https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/1080/Big_Buck_Bunny_1080_10s_10MB.mp4", 360);
+                Intent intent = new Intent();
+                intent.setType("video/*");
+                intent.setAction(Intent.ACTION_GET_CONTENT);
+                startActivityForResult(intent, 1);
             }
         });
         //插入链接
@@ -604,6 +625,7 @@ public class Notes_Edit extends Activity {
                 break;
         }
     }
+
     private void getImage() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
             startActivityForResult(new Intent(Intent.ACTION_GET_CONTENT).setType("image/*"),

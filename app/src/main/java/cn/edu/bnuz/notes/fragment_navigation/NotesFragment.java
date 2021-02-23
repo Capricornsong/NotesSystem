@@ -61,8 +61,8 @@ public class NotesFragment extends Fragment {
     private static final String ARG_SHOW_TEXT = "text";
     private String mContentText;
     private Unbinder unbinder;
-    @BindView(R.id.create_notes)
-    ImageButton create_notes;
+    @BindView(R.id.add_notes)
+    ImageButton add_notes;
     @BindView(R.id.listview_contact)
     ListView mListView_contact;
     private NotesAdapter mNotesAdapter;
@@ -283,7 +283,7 @@ public class NotesFragment extends Fragment {
 //            Lnotes.add(note);
 //        }
 //        Lnotes.addAll()
-        create_notes.setOnClickListener(new View.OnClickListener() {
+        add_notes.setOnClickListener(new View.OnClickListener() {
             @Override
 
             public void onClick(View v) {

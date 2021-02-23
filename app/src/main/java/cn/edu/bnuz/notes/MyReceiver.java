@@ -34,7 +34,6 @@ public class MyReceiver extends BroadcastReceiver {
         // an Intent broadcast.
         ConnectivityManager connectivityManager = (ConnectivityManager)context.getSystemService(Context.CONNECTIVITY_SERVICE);
         mNetworkInfo = connectivityManager.getActiveNetworkInfo();
-
         if (mNetworkInfo != null && mNetworkInfo.isAvailable() && Token.token.equals("")){
             Log.d(TAG, "onReceive: token:" + Token.token);
             Toast.makeText(context,"网络已连接",Toast.LENGTH_LONG).show();

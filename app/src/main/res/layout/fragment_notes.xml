@@ -9,16 +9,19 @@
         android:id="@+id/listview_contact"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/qmui_config_color_white"/>
+        android:background="#FFCCCCCC"
+        android:divider="#FFCCCCCC"
+        android:dividerHeight="20dp"
+        />
 
-            <ImageButton
-                    android:id="@+id/create_notes"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:background="@null"
-                    android:contentDescription="@null"
-                    android:src="@mipmap/notes_create"
-                    android:layout_alignParentBottom="true"
-                    android:layout_alignParentRight="true"/>
-
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/add_notes"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="16dp"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentRight="true"
+                app:srcCompat="@mipmap/add"
+                android:backgroundTint="@color/app_color_blue"
+                />
 </RelativeLayout>

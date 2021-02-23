@@ -24,13 +24,14 @@
         android:layout_below="@+id/top_bar_notes"
         android:id="@+id/edit_linear"
         android:background="@color/qmui_config_color_white">
-    <EditText
-        android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:id="@+id/title"
-        android:hint="  请输入标题"
-        />
-    <jp.wasabeef.richeditor.RichEditor
+
+        <EditText
+            android:id="@+id/editTitle"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:hint="  请输入标题" />
+
+        <jp.wasabeef.richeditor.RichEditor
         android:id="@+id/richeditor"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -52,6 +53,7 @@
             android:layout_alignParentBottom="true"
     >
         <LinearLayout
+                android:id="@+id/line_button"
                 android:orientation="horizontal"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -292,5 +294,14 @@
 
         </LinearLayout>
     </HorizontalScrollView>
-
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/create_notes"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:layout_above="@+id/buttonIist"
+        android:layout_alignParentRight="true"
+        app:srcCompat="@drawable/create"
+        android:backgroundTint="@color/app_color_blue"
+        tools:ignore="NotSibling" />
 </RelativeLayout>
