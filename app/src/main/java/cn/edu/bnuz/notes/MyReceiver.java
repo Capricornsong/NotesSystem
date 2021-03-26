@@ -21,6 +21,7 @@ import java.util.List;
 import cn.edu.bnuz.notes.pojo.Token;
 import rxhttp.RxHttp;
 
+import static cn.edu.bnuz.notes.MyApplication.mNoteController;
 import static cn.edu.bnuz.notes.MyApplication.threadExecutor;
 
 public class MyReceiver extends BroadcastReceiver {
@@ -40,6 +41,7 @@ public class MyReceiver extends BroadcastReceiver {
         }
         else if (mNetworkInfo != null && mNetworkInfo.isAvailable() && !Token.token.equals("")){
             Toast.makeText(context,"网络已连接,正在尝试同步笔记",Toast.LENGTH_LONG).show();
+
             //上传本地数据库中未上传的笔记
             SynNote();
         }
@@ -51,20 +53,33 @@ public class MyReceiver extends BroadcastReceiver {
     }
 
     public void SynNote(){
+        Log.d(TAG, "SynNote: 正在将本地创建的笔记同步到云端");
         //新创建在本地的笔记
-        List<Note> notes = LitePal.where("isSyn = ?","0").find(Note.class);
+        List<Note> notesUpdate = LitePal.where("isSyn = ? and isDelete != ?","0","1").find(Note.class);
+        List<Note> notesDelete = LitePal.where("isDelete = ?","1").find(Note.class);
         //批量上传为同步笔记
         threadExecutor.execute(new Runnable() {
             @Override
             public void run() {
-                uploadNotes(notes);
+                uploadNotes(notesUpdate);
             }
         });
+//        uploadNotes(notesUpdate);
+
+        threadExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                deleteNotes(notesDelete);
+            }
+        });
+
+
 
 //        for(Note note : notes){
 //            Log.d(TAG, "IsSyn:" + note.getIsSyn() + " noteid:" + note.getNoteId());
 //        }
     }
+
 
     public void uploadNotes(List<Note> notes){
         for(Note note : notes){
@@ -89,22 +104,56 @@ public class MyReceiver extends BroadcastReceiver {
                             updateNews.setUserId(c.getObject().getUserId());
                             updateNews.setNoteId(c.getObject().getNoteId());
                             updateNews.setGmt_modified(c.getObject().getGmtModified());
-
-                            updateNews.setVersion(1);
-                            updateNews.setGmt_create(c.getObject().getGmtModified());
+                            updateNews.setVersion(c.getObject().getVersion());
+//                            updateNews.setGmt_create(c.getObject().getGmtModified());
                             //用上传成功的返回值更新本地的笔记
-                            updateNews.updateAll("IsSyn = ? and content = ?","0",c.getObject().getHtmlContent());
+                            updateNews.updateAll("IsSyn = ? and content = ?","0",Long.toString(c.getObject().getNoteId()));
                         }
                     },throwable -> {
                         Log.d(TAG + "uploadNotes", "创建文本笔记失败" + throwable);
                     });
         }
+
+
 //        Note updateNews = new Note();
 //        updateNews.setIsSyn(1);
 //        updateNews.updateAll("IsSyn = ?","0");
-
-
     }
 
+    public void deleteNotes(List<Note> notes){
+
+        for(Note note : notes){
+            //获取本地创删除但云云端未删除的笔记
+            Log.d(TAG, "Isdelete:" + note.getIsDelete() + " notetitle:" + note.getTitle());
+            mNoteController.DeleteNote(note.getNoteId());
+//            RxHttp.postJson("/note")
+//                    .setSync()
+//                    .add("content",note.getContent())
+//                    .add("htmlContent",note.getHtmlContent())
+//                    .add("title",note.getTitle())
+//                    .add("userId",note.getUserId())
+//                    .asClass(NetNoteRD.class)
+//                    .subscribe(c -> {
+//                        Log.d("NoteController", "code: " + c.getCode());
+//                        if (c.getCode() == 200){
+//                            Log.d(TAG, "CreateNote: 成功创建文本笔记！");
+//                            Log.d(TAG, "CreateNote: content --> " + c.getObject().getGmtModified().toString());
+//
+//                            Note updateNews = new Note();
+//                            //表示已经同步
+//                            updateNews.setIsSyn(1);
+//                            updateNews.setUserId(c.getObject().getUserId());
+//                            updateNews.setNoteId(c.getObject().getNoteId());
+//                            updateNews.setGmt_modified(c.getObject().getGmtModified());
+//                            updateNews.setVersion(1);
+////                            updateNews.setGmt_create(c.getObject().getGmtModified());
+//                            //用上传成功的返回值更新本地的笔记
+//                            updateNews.updateAll("IsSyn = ? and content = ?","0",Long.toString(c.getObject().getNoteId()));
+//                        }
+//                    },throwable -> {
+//                        Log.d(TAG + "uploadNotes", "创建文本笔记失败" + throwable);
+//                    });
+        }
+    }
 
 }

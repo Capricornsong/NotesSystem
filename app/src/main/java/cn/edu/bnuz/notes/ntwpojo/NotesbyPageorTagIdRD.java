@@ -57,10 +57,11 @@ public class NotesbyPageorTagIdRD extends BaseRD {
             private String gmtCreate;
             private String content;
 
-            public Notes(String title,String content,String gmtModified){
+            public Notes(String title,String content,String gmtModified,Long noteId){
                 this.content = content;
                 this.title = title;
                 this.gmtModified = getGmtModified();
+                this.noteId = noteId;
             }
 
             public String getGmtModified() {

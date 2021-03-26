@@ -14,10 +14,19 @@ public class Note extends LitePalSupport {
     String htmlcontent;
     int version;
     int delete;
-    String gmt_create;
     String gmt_modified;
     //1表示内容已同步，0表示未同步。
     int isSyn ;
+    //
+    int isDelete;
+
+    public int getIsDelete() {
+        return isDelete;
+    }
+
+    public void setIsDelete(int isDelete) {
+        this.isDelete = isDelete;
+    }
 
     public int getIsSyn() {
         return isSyn;
@@ -83,9 +92,6 @@ public class Note extends LitePalSupport {
         this.delete = delete;
     }
 
-    public String getGmt_create() {
-        return gmt_create;
-    }
 
 //    public void setGmt_create(String  gmt_create) throws ParseException {
 //        SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -94,9 +100,6 @@ public class Note extends LitePalSupport {
 //        this.gmt_create = date;
 //    }
 
-    public void setGmt_create(String gmt_create) {
-        this.gmt_create = gmt_create;
-    }
 
     public void setGmt_modified(String gmt_modified) {
         this.gmt_modified = gmt_modified;

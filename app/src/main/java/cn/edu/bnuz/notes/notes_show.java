@@ -35,6 +35,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.litepal.LitePal;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -50,6 +51,7 @@ import jp.wasabeef.richeditor.RichEditor;
 import static cn.edu.bnuz.notes.MyApplication.mFileTransController;
 import static cn.edu.bnuz.notes.MyApplication.mNoteController;
 import static cn.edu.bnuz.notes.MyApplication.threadExecutor;
+import static cn.edu.bnuz.notes.utils.util.NetCheck;
 import static org.litepal.LitePalApplication.getContext;
 
 public class  notes_show extends Activity {
@@ -135,14 +137,20 @@ public class  notes_show extends Activity {
         setContentView(root);
     }
 
+
+
     private void initView() {
         Intent intent = getIntent();
         String htmlcontent = intent.getStringExtra("htmlcontent");
+        String content = intent.getStringExtra("content");
         String title = intent.getStringExtra("title");
+        String gmt_modified = intent.getStringExtra("gmt_modified");
         Long noteid = intent.getLongExtra("noteid",0L);
-        String html = mPreview_show.getText().toString();
+        Long userid = intent.getLongExtra("userid",0L);
+        int version = intent.getIntExtra("version",-1);
+
         mEditor.setHtml(htmlcontent);
-        Log.d(TAG,"htmlcontent:"+  htmlcontent);
+//        Log.d(TAG,"htmlcontent:"+  htmlcontent);
         title_show.setText(title);
         //返回按钮
         NotesTopBar.addLeftBackImageButton().setOnClickListener(new View.OnClickListener() {
@@ -156,159 +164,146 @@ public class  notes_show extends Activity {
         NotesTopBar.addRightImageButton(R.mipmap.share,R.layout.notes_edit_ui).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if (NetCheck()) {
 
+                }
+                else{
+
+                }
             }
         });
         //保存按钮
         save_note.setOnClickListener(new View.OnClickListener() {
+            //用于判断本地是否缓存过点开的这篇笔记
+            int IsLocalNoteExcist = LitePal.where("noteId = ?",Long.toString(noteid)).find(Note.class).size();
+
             @Override
             public void onClick(View v) {
-
+                String html = mPreview_show.getText().toString();
 //              String html1 = "111<img src=\"/storage/emulated/0/Download/create.png\" alt=\"/storage/emulated/0/Download/create.png\" style=\"max-width:75%\"><img src=\"/storage/emulated/0/Download/create.png\" alt=\"/storage/emulated/0/Download/create.png\" style=\"max-width:75%\">";
 
-                System.out.println("htmlcontent:" + htmlcontent);
                 System.out.println("html:" + mPreview_show.getText().toString());
-                System.out.println("title_show:" + title_show.getText().toString());
-                System.out.println("title" + title);
 
+                Document doc = Jsoup.parseBodyFragment(html);
+                Element body = doc.body();
+
+                Note note = new Note();
+                note.setTitle(title_show.getText().toString());
+                note.setContent(body.text());
+                note.setHtmlContent(html);
+                note.setNoteId(noteid);
+                note.setUserId(userid);
+                note.setVersion(version);
 
                 //判断是否有编辑过
+                //未改动
                 if (html.equals("") && title_show.getText().toString().equals(title)) {
+
+                    if (IsLocalNoteExcist != 0 ) {
+                        int LocalNoteVersion = LitePal.where("noteId = ?",Long.toString(noteid)).find(Note.class).get(0).getVersion();
+                        if (LocalNoteVersion != version) {
+                            //将云端的新版本更新到本地
+                            note.updateAll("noteId = ?", Long.toString(noteid));
+                        }
+
+                    }
+                    else{
+                        //保存在本地
+                        note.setHtmlContent(htmlcontent);
+                        note.setContent(content);
+                        note.setIsSyn(1);
+                        note.setGmt_modified(gmt_modified);
+                        note.save();
+                    }
+
                     finish();
                 }
+                //改动
                 else{
+                    Log.d(TAG, "onClick: 正在更新到云端");
                     Toast.makeText(notes_show.this,"修改正在上传至云端",Toast.LENGTH_SHORT).show();
-                    Document doc = Jsoup.parseBodyFragment(html);
-                    Element body = doc.body();
-                    Note note = new Note();
-                    note.setTitle(title_show.getText().toString());
-//              note.setHtmlContent(mPreview.getText().toString());
-                    note.setContent(body.text());
-                    note.setHtmlContent(html);
+
+                    //编辑后上传
+                    onEdit(note);
 //              note.setUserId(888888888);
 //              List<File> images = new ArrayList<>();
 //              String html = mPreview.getText().toString();
 //              Document doc = Jsoup.parseBodyFragment(html);
 //              Element body = doc.body();
-                    List<String> imagesUrl = new ArrayList<>();
-                    Elements img = doc.select("img");
-                    int imgsize = img.size();
-                    Log.d(TAG, "onClick: imgsize:" + imgsize);
-                    Thread thread = new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Looper.prepare();
-
-                            long result = mNoteController.CreateNote(note);
-                            Log.d(TAG, "run: 修改笔记结果码：:" + result);
-                            if (result > 9999999) {
-                                note.setNoteId(result);
-                                //准备待上传的文件list
-                                for (Element s : img) {
-                                    Log.d(TAG, "src:" + s.attr("src"));
-                                    File file = new File(s.attr("src"));
-                                    String url = mFileTransController.FileUpload(file,result);
-                                    Log.d(TAG, "run: filesuploadresult:" + url);
-                                    imagesUrl.add(url);
-                                }
-                                //得到urllist：imagesUrl
-                                for (int i = 0;i < imgsize;i++){
-                                    doc.select("img").get(i).attr("src",imagesUrl.get(i)).attr("alt",imagesUrl.get(i));
-                                }
-                                //得到替换完成的doc
-                                Log.d(TAG, "run: 替换完成的doc" + doc);
-                                note.setHtmlContent(doc.body().toString());
-                                //修改云端htmlcontent
-                                mNoteController.UpdateNoteHtmlContent(note);
-//                          mNoteController.UpdateNote(note);
-                                Toast.makeText(notes_show.this,"已上传至云端",Toast.LENGTH_LONG).show();
-                            }
-                            else if (result == 201){
-                                Toast.makeText(notes_show.this,"上传失败，已保存在本地",Toast.LENGTH_LONG).show();
-                            }
-                            else {
-                                Toast.makeText(notes_show.this,"保存失败",Toast.LENGTH_LONG).show();
-                            }
-                            Looper.loop();
-                        }
-                    });
-                    thread.start();
-                    try {
-                        thread.join();      //等待线程执行完
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-
-                    threadExecutor.execute(new Runnable() {
-                        @Override
-                        public void run() {
-                            Looper.prepare();
-                            long result = mNoteController.CreateNote(note);
-
-                            //即上传成功，result为noteid
-                            if (result > 9999999) {
-                                //准备待上传的文件list
-                                String html = mPreview_show.getText().toString();
-                                Document doc = Jsoup.parseBodyFragment(html);
-//                        Element body = doc.body();
-                                Elements img = doc.select("img");
-                                List<File> images = new ArrayList<>();
-                                for(Element s : img){
-                                    File file = new File(s.attr("src"));
-                                    images.add(file);
-                                }
-
-                                int size = doc.select("img").size();
-                                int i;
-                                if (size != 0) {
-                                    for (i = 0; i < size; i++){
-                                        File file = new File(doc.select("img").get(i).attr("src"));
-                                        threadExecutor.execute(new Runnable() {
-                                            @Override
-                                            public void run() {
-//                             s.attr("src",mFileTransController.FileUpload(file,result));
-//                             Log.d(TAG, "run: filurl:" + mFileTransController.FileUpload(file,result));
-//                             doc.select("img").get(i).attr("src",mFileTransController.FileUpload(file,result));
-                                            }
-                                        });
-//                           TAG, "onCreate: img:" + s.attr("src"));
-//                                doc.select("img").get(i).attr("src",doc2.select("img").get(i).attr("src"));
-                                    }
-
-
-                                    Log.d(TAG, "onCreate:" + doc);
-//                            List<Element> img1=doc1.select("img");
-
-//                            for(Element s : img){
-//                                File file = new File(s.attr("src"));
-//                                threadExecutor.execute(new Runnable() {
-//                                    @Override
-//                                    public void run() {
-////                                        s.attr("src",mFileTransController.FileUpload(file,result));
-//                                        Log.d(TAG, "run: filurl:" + mFileTransController.FileUpload(file,result));
+                    //--------------------------------------------------------------------------
+//                    List<String> imagesUrl = new ArrayList<>();
+//                    Elements img = doc.select("img");
+//                    int imgsize = img.size();
+//                    Log.d(TAG, "onClick: imgsize:" + imgsize);
+//
+//                    threadExecutor.execute(new Runnable() {
+//                        @Override
+//                        public void run() {
+//                            Looper.prepare();
+//                            long result = mNoteController.UpdateNote(note);
+//                            Log.d(TAG, "run: 修改笔记结果码：:" + result);
+//                            if (result == 200) {
+//                                //准备待上传的文件list
+//                                for (Element s : img) {
+//                                    if (!(s.attr("src").contains("http:/"))) {
+//                                        Log.d(TAG, "src:" + s.attr("src"));
+//                                        File file = new File(s.attr("src"));
+//                                        String url = mFileTransController.FileUpload(file,note.getNoteId());
+//                                        Log.d(TAG, "run: filesuploadresult:" + url);
+//                                        imagesUrl.add(url);
 //                                    }
-//                                });
-//                                Log.d(TAG, "onCreate: img:" + s.attr("src"));
+//                                }
+//                                Log.d(TAG, "run: imagesize" + imgsize);
+//                                if (imgsize != 0) {
+//                                    //得到urllist：imagesUrl
+//                                    for (int i = 0;i < imgsize;i++){
+//                                        doc.select("img").get(i).attr("src",imagesUrl.get(i)).attr("alt",imagesUrl.get(i));
+//                                    }
+//                                    //得到替换完成的doc
+//                                    Log.d(TAG, "run: 替换完成的doc" + doc);
+//                                    note.setHtmlContent(doc.body().toString());
+//                                    //修改云端htmlcontent
+//                                    mNoteController.UpdateNoteHtmlContent(note);
+////                          mNoteController.UpdateNote(note);
+//                                }
+//                                Toast.makeText(notes_show.this,"已上传至云端",Toast.LENGTH_LONG).show();
 //                            }
-                                }
+//                            else if (result == 201){
+//                                Toast.makeText(notes_show.this,"上传失败，已保存在本地",Toast.LENGTH_LONG).show();
+//                            }
+//                            else {
+//                                Toast.makeText(notes_show.this,"保存失败",Toast.LENGTH_LONG).show();
+//                                Log.d(TAG, "run: fail111111111111111111111111111111111111111111111111111");
+//                            }
+//                            Looper.loop();
+//                        }
+//                    });
 
-                                Toast.makeText(notes_show.this,"已上传至云端",Toast.LENGTH_LONG).show();
-                            }
-                            else if (result == 201){
-                                Toast.makeText(notes_show.this,"上传失败，已保存在本地",Toast.LENGTH_LONG).show();
-                            }
-                            else {
-                                Toast.makeText(notes_show.this,"保存失败",Toast.LENGTH_LONG).show();
-                            }
-                            Looper.loop();
-                        }
-                    });
+                    //------------------------------------------------------------------------
+//                    Thread thread = new Thread(new Runnable() {
+//                        @Override
+//                        public void run() {
+//
+//                        }
+//                    });
+//                    thread.start();
+//                    try {
+//                        thread.join();      //等待线程执行完
+//                    } catch (InterruptedException e) {
+//                        e.printStackTrace();
+//                    }
+                    Log.d(TAG, "onClick: finish2222222222222222222222222222222222");
                     finish();
                 }
 
 //                mEditor.setHtml("11111114<img src=\"/storage/emulated/0/Download/create.png\" alt=\"/storage/emulated/0/Download/create.png\" style=\"max-width:75%\">");
             }
         });
+
+
+
+
+
         NotesTopBar.setTitle("编辑笔记");
 
         mEditor.setEditorHeight(200);
@@ -320,7 +315,7 @@ public class  notes_show extends Activity {
             @Override
             public void onTextChange(String text) {
                 mPreview_show.setText(text);
-                Log.d(TAG, "onTextChange: " + mEditor.getHtml());
+//                Log.d(TAG, "onTextChange: " + mEditor.getHtml());
             }
         });
         //撤销
@@ -618,6 +613,63 @@ public class  notes_show extends Activity {
         });
     }
 
+    //断网编辑后退出
+    //联网不编辑推出
+    //联网编辑后推出
+    public void onEdit(Note note){
+
+        Document doc = Jsoup.parseBodyFragment(note.getHtmlContent());
+        Element body = doc.body();
+
+        List<String> imagesUrl = new ArrayList<>();
+        Elements img = doc.select("img");
+        int imgsize = img.size();
+        Log.d(TAG, "onClick: imgsize:" + imgsize);
+
+        threadExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                Looper.prepare();
+                long result = mNoteController.UpdateNote(note);
+                Log.d(TAG, "run: 修改笔记结果码：:" + result);
+                if (result == 200) {
+                    //准备待上传的文件list
+                    for (Element s : img) {
+                        if (!(s.attr("src").contains("http:/"))) {
+                            Log.d(TAG, "src:" + s.attr("src"));
+                            File file = new File(s.attr("src"));
+                            String url = mFileTransController.FileUpload(file,note.getNoteId());
+                            Log.d(TAG, "run: filesuploadresult:" + url);
+                            imagesUrl.add(url);
+                        }
+                    }
+                    Log.d(TAG, "run: imagesize" + imgsize);
+                    if (imgsize != 0) {
+                        //得到urllist：imagesUrl
+                        for (int i = 0;i < imgsize;i++){
+                            doc.select("img").get(i).attr("src",imagesUrl.get(i)).attr("alt",imagesUrl.get(i));
+                        }
+                        //得到替换完成的doc
+                        Log.d(TAG, "run: 替换完成的doc" + doc);
+                        note.setHtmlContent(doc.body().toString());
+                        //修改云端htmlcontent
+                        mNoteController.UpdateNoteHtmlContent(note);
+//                          mNoteController.UpdateNote(note);
+                    }
+                    Toast.makeText(notes_show.this,"已上传至云端",Toast.LENGTH_LONG).show();
+                }
+                else if (result == 201){
+                    Toast.makeText(notes_show.this,"上传失败，已保存在本地",Toast.LENGTH_LONG).show();
+                }
+                else {
+                    Toast.makeText(notes_show.this,"保存失败",Toast.LENGTH_LONG).show();
+                    Log.d(TAG, "run: fail111111111111111111111111111111111111111111111111111");
+                }
+                Looper.loop();
+            }
+        });
+    }
+
     String[] mPermissionList = new String[]{
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
             Manifest.permission.READ_EXTERNAL_STORAGE};
@@ -647,6 +699,20 @@ public class  notes_show extends Activity {
             intent.setType("image/*");
             startActivityForResult(intent, 1);
         }
+    }
+    @Override
+    protected void onDestroy() {
+//        View.post(new Runnable(){
+//            @Override
+//            public void run() {
+//
+//            }
+//        });
+        save_note.performClick();
+        super.onDestroy();
+        Log.d(TAG, "onDestroy:...");
+
+
     }
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {

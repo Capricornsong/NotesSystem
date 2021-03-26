@@ -170,6 +170,9 @@ public class MainActivity extends FragmentActivity {
         //关闭Socket连接
         closeSocketConnect();
         mViewPager.removeOnPageChangeListener(mPageChangeListener);
+
+        //关闭线程池
+        threadExecutor.shutdown();
     }
 
     private void closeSocketConnect() {

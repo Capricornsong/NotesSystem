@@ -3,6 +3,10 @@ package cn.edu.bnuz.notes.impl;
 import android.os.Binder;
 import android.util.Log;
 
+import org.litepal.LitePal;
+import org.litepal.crud.LitePalSupport;
+import org.litepal.exceptions.DataSupportException;
+
 import cn.edu.bnuz.notes.interfaces.INoteController;
 import cn.edu.bnuz.notes.ntwpojo.AddTagtoNoteRD;
 import cn.edu.bnuz.notes.ntwpojo.DeleteNoteTagShareEmailCheckUsernameCheckRD;
@@ -70,7 +74,7 @@ public class NoteControllerImpl extends Binder implements INoteController{
         newnote.setUserId(note.getUserId());
         newnote.setHtmlContent(note.getHtmlContent());
         newnote.setContent(note.getContent());
-
+        newnote.setUserId(note.getUserId());
 //        LitePal.deleteAll(Note.class);
         //判断网络状态
         if(NetCheck()){
@@ -85,7 +89,7 @@ public class NoteControllerImpl extends Binder implements INoteController{
                         Log.d("NoteController", "code: " + c.getCode());
                         if (c.getCode() == 200){
                             responseCode.set(c.getObject().getNoteId());
-                            newnote.setGmt_create(c.getObject().getGmtModified());
+//                            newnote.setGmt_create(c.getObject().getGmtModified());
                             newnote.setGmt_modified(c.getObject().getGmtModified());
                             newnote.setNoteId(c.getObject().getNoteId());
                             //设置标识符为1，即已同步到网络
@@ -142,6 +146,8 @@ public class NoteControllerImpl extends Binder implements INoteController{
     @Override
     public long UpdateNote(Note note) {
         Log.d(TAG, "UpdateNote。。。");
+        Log.d(TAG, "UpdateNote: noteid" + note.getNoteId());
+        Log.d(TAG, "UpdateNote: content" + note.getHtmlContent());
         Note updateNews = new Note();
         updateNews.setNoteId(note.getNoteId());
         updateNews.setTitle(note.getTitle());
@@ -149,7 +155,11 @@ public class NoteControllerImpl extends Binder implements INoteController{
         updateNews.setHtmlContent(note.getHtmlContent());
         updateNews.setUserId(note.getUserId());
         //用上传成功的返回值更新本地的笔记
-        updateNews.updateAll("noteId = ?", String.valueOf(note.getNoteId()));
+//        updateNews.updateAll("noteId = ?", String.valueOf(note.getNoteId()));
+        //用于下方判断本地是否存在此笔记
+        List<Note> noteList = LitePal.where("noteId = ?", Long.toString(note.getNoteId())).find(Note.class);
+        Log.d(TAG, "UpdateNote: noteListsize = " + noteList.size());
+
         if (NetCheck()){
             RxHttp.putJson("/note")
                     .setSync()
@@ -166,13 +176,21 @@ public class NoteControllerImpl extends Binder implements INoteController{
                             updateNews.setIsSyn(1);
                             updateNews.setVersion(c.getObject().getVersion());
                             updateNews.setGmt_modified(c.getObject().getGmtModified());
-                            updateNews.save();
+
+                            if (noteList.size() == 0) {
+                                //用上传成功的返回值更新本地的笔记
+                                updateNews.save();
+                            }
+                            else {
+                               updateNews.updateAll("noteId = ？",Long.toString(note.getNoteId()));
+                            }
+
                             //websocket发送noteid到另一端
                             if (myWebSocketClient != null && myWebSocketClient.isOpen()) {
                                 myWebSocketClient.send(String.valueOf(c.getObject().getNoteId()));
                             }
                             Log.d(TAG, "UpdateNote: 成功修改文本笔记");
-                            Log.d(TAG, "CreateNote: content --> " + c.getObject().getNoteId());
+                            Log.d(TAG, "UpdateNote: NoteId --> " + c.getObject().getNoteId());
                         }
                         else if (c.getCode() == 3005){
                             System.out.println("修改异常，笔记不存在或已被删除！");
@@ -180,7 +198,8 @@ public class NoteControllerImpl extends Binder implements INoteController{
                         else{
                             Log.d(TAG, "UpdateNote: 失败");
                             updateNews.setIsSyn(0);
-                            updateNews.save();
+                            updateNews.updateAll("noteId = ?", String.valueOf(note.getNoteId()));
+//                            updateNews.save();
                         }
                     },throwable -> {
                         Log.d("UpdateNote", "修改笔记失败!" + throwable);
@@ -190,7 +209,15 @@ public class NoteControllerImpl extends Binder implements INoteController{
         }
         else{
             updateNews.setIsSyn(0);
-            updateNews.save();
+            if (noteList.size() == 0) {
+                //用上传成功的返回值更新本地的笔记
+                updateNews.updateAll("noteId = ？",Long.toString(note.getNoteId()));
+            }
+            else {
+                updateNews.save();
+            }
+//            updateNews.updateAll("noteId = ?", String.valueOf(note.getNoteId()));
+//            updateNews.save();
             return 201;
         }
 
@@ -262,7 +289,10 @@ public class NoteControllerImpl extends Binder implements INoteController{
             return responseCode.get();
         }
         else{
-            note.setIsSyn(0);
+            Log.d(TAG, "DeleteNote: 本地逻辑删除");
+            Log.d(TAG, "DeleteNote: noteid" + Long.toString(noteid));
+            note.setDelete(1);
+            note.setIsDelete(1);
             note.updateAll("noteId = ?",Long.toString(noteid));
             return 201;
         }
