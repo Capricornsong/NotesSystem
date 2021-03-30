@@ -23,6 +23,12 @@ import androidx.fragment.app.Fragment;
 
 import com.qmuiteam.qmui.widget.dialog.QMUIDialog;
 import com.qmuiteam.qmui.widget.dialog.QMUIDialogAction;
+import com.scwang.smart.refresh.footer.ClassicsFooter;
+import com.scwang.smart.refresh.header.ClassicsHeader;
+import com.scwang.smart.refresh.header.MaterialHeader;
+import com.scwang.smart.refresh.layout.api.RefreshLayout;
+import com.scwang.smart.refresh.layout.listener.OnLoadMoreListener;
+import com.scwang.smart.refresh.layout.listener.OnRefreshListener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,6 +53,7 @@ import cn.edu.bnuz.notes.utils.util;
 import static cn.edu.bnuz.notes.MyApplication.mFileController;
 import static cn.edu.bnuz.notes.MyApplication.mFileTransController;
 import static cn.edu.bnuz.notes.MyApplication.mNoteController;
+import static cn.edu.bnuz.notes.MyApplication.mShareController;
 import static cn.edu.bnuz.notes.MyApplication.threadExecutor;
 import static cn.edu.bnuz.notes.constants.destPath;
 import static cn.edu.bnuz.notes.utils.util.NetCheck;
@@ -66,8 +73,10 @@ public class NotesFragment extends Fragment {
     ImageButton add_notes;
     @BindView(R.id.listview_contact)
     ListView mListView_contact;
+    @BindView(R.id.refreshLayout)
+    RefreshLayout refreshLayout;
     private NotesAdapter mNotesAdapter;
-    public List<NotesbyPageorTagIdRD.NotesPkg.Notes> Lnotes=new ArrayList<>();
+
     private String TAG ="NoteFragment";
     private int index = 0;      //用于记录点击item的序号，用于destory方法。
 
@@ -102,11 +111,31 @@ public class NotesFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_notes,null);
         unbinder = ButterKnife.bind(this, rootView);
         initView();
+        //设置 Header 为 Material风格
+        refreshLayout.setRefreshHeader(new MaterialHeader(getContext()).setShowBezierWave(true));
+        refreshLayout.setRefreshHeader(new ClassicsHeader(getContext()));
+//        refreshLayout.setRefreshFooter(new ClassicsFooter(getContext()));
+        refreshLayout.setOnRefreshListener(new OnRefreshListener() {
+            @Override
+            public void onRefresh(RefreshLayout refreshlayout) {
+                initView();
+                refreshlayout.finishRefresh(2000/*,false*/);//传入false表示刷新失败
+
+            }
+        });
+        //加载
+//        refreshLayout.setOnLoadMoreListener(new OnLoadMoreListener() {
+//            @Override
+//            public void onLoadMore(RefreshLayout refreshlayout) {
+//                initView();
+//                refreshlayout.finishLoadMore(2000/*,false*/);//传入false表示加载失败
+//            }
+//        });
         return rootView;
     }
 
     private void initView() {
-
+        List<NotesbyPageorTagIdRD.NotesPkg.Notes> Lnotes=new ArrayList<>();
         mFilespPath.clear();
         mNote = new Note();
         //判断是否有网络
@@ -141,8 +170,6 @@ public class NotesFragment extends Fragment {
         mNotesAdapter = new NotesAdapter(getContext(),R.layout.simple_list_item,Lnotes);
         mListView_contact.setAdapter(mNotesAdapter);
         mListView_contact.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
-
 
             /**+
              * Item 点击方法
@@ -191,73 +218,6 @@ public class NotesFragment extends Fragment {
                     //显示笔记详情
                     startActivity(intent);
 
-
-//                    CountDownLatch countDownLatch2 = new CountDownLatch(1);
-//                    threadExecutor.execute(new Runnable() {
-//                        @Override
-//                        public void run() {
-//                            Log.d(TAG, "缓存中。。。。");
-//
-////                mNote = mNoteController.GetNoteByNoteID(Lnotes.get(i).getNoteId());     //通过noteid获取云端笔记
-//
-//                            mFileList.addAll(mFileController.GetFilesbyNoteId(Lnotes.get(index).getNoteId()));
-//
-//                            //循环下载文件，并将返回的每个文件的本地路径存入mFilespPath。
-//                            for (GetFilesbyNoteId.DataBean file : mFileList){
-//                                //若本地已存在
-//                                if (util.fileIsExists(file.getFileName())) {
-//                                    //路径替换为本地路径
-//                                    mFilespPath.add(destPath + file.getFileName());
-//                                }
-//                                else{
-//                                    //下载文件，并替换为本地路径
-//                                    mFilespPath.add(mFileTransController.FileDownload(file.getFileId(),file.getFileName()));
-//                                }
-//                            }
-//                            countDownLatch2.countDown();
-//
-//                        }
-//                    });
-//
-//                    //等待上方线程执行完
-//                    try {
-//                        countDownLatch2.await();
-//                    } catch (InterruptedException e) {
-//                        e.printStackTrace();
-//                    }
-//                    //将最新获取到的数据更新/存入本地
-//                    Note note = new Note();
-//                    note.setTitle(mNote.getTitle());
-//                    note.setContent(mNote.getContent());
-//                    note.setNoteId(mNote.getNoteId());
-//                    note.setVersion(mNote.getVersion());
-//                    note.setUserId(mNote.getUserId());
-//                    note.setIsSyn(1);
-//                    for (String path : mFilespPath){
-//                        Log.d(TAG, "onItemClick: path:" + path);
-//                    }
-//                    String html = mNote.getHtmlContent();
-//                    Document doc = Jsoup.parseBodyFragment(html);
-//                    Element body = doc.body();
-//                    Elements img = doc.select("img");
-//
-//                    //替换img表点中的src为mFilespPath该img对应的本地路径
-//                    for (int j = 0;j < mFilespPath.size();j++){
-//                        doc.select("img").get(j).attr("src",mFilespPath.get(j)).attr("alt",mFilespPath.get(j));
-//                    }
-//                    note.setHtmlContent(doc.body().toString());
-//                    List<Note> noteListInside = new ArrayList<>();
-//                    noteListInside.addAll(LitePal.select("noteId").where("noteId = ?",String.valueOf(mNote.getNoteId())).find(Note.class));
-//                    Log.d(TAG, "onItemClick: noteListInside.size()" + noteListInside.size());
-//                    if (noteListInside.size() == 0) {
-//                        note.save();
-//                    }
-//                    else{
-//                        note.updateAll("noteId = ?",String.valueOf(mNote.getNoteId()));
-//                    }
-//                    Log.d(TAG, "onDestroyView: 缓存完成。。。。。。");
-
-////                    Log.d(TAG, "onItemClick: String.valueOf(mNote.getNoteId()):" + String.valueOf(mNote.getNoteId()));
                 }
                 //无网络时
                 else{
@@ -291,27 +251,18 @@ public class NotesFragment extends Fragment {
                                     @Override
                                     public void run() {
                                         mNoteController.DeleteNote(Lnotes.get(i).getNoteId());
+
                                     }
                                 });
                                 dialog.dismiss();
                                 Toast.makeText(getContext(), "已删除", Toast.LENGTH_SHORT).show();
+                                refreshLayout.autoRefresh();//自动刷新
                             }
                         })
                         .show();
                 return true;
             }
         });
-
-//        for (NotesbyPageorTagIdRD.NotesPkg.Notes note: Lnotes){
-////            NotesbyPageorTagIdRD.NotesPkg.Notes notes=new NotesbyPageorTagIdRD.NotesPkg.Notes(note.getTitle(),note.getContent(),note.getGmtModified());
-//            Log.d("shit", "initView: content" + note.getContent());
-//        }
-//        for (NotesbyPageorTagIdRD.NotesPkg.Notes note: Lnotes){
-////            NotesbyPageorTagIdRD.NotesPkg.Notes notes=new NotesbyPageorTagIdRD.NotesPkg.Notes(note.getTitle(),note.getContent(),note.getGmtModified());
-//            Log.d("fuck", "initView: content" + note.getContent());
-//            Lnotes.add(note);
-//        }
-//        Lnotes.addAll()
 
         //新建笔记按钮
         add_notes.setOnClickListener(new View.OnClickListener() {
@@ -330,7 +281,6 @@ public class NotesFragment extends Fragment {
             }
         });
     }
-
 
     @Override
     public void onDestroyView() {

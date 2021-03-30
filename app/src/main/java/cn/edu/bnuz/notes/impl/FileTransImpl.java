@@ -108,6 +108,7 @@ public class FileTransImpl extends Binder implements IFileTrans {
                 .asClass(PostFile.class)
                 .subscribe(s -> {
                     if (s.getCode() == 200){
+                        Log.d(TAG, "FileUpload: uploaddone..");
                         result.set(s.getData().getFileUrl());
 //                        fileid.set(s.getData().getFileId());
                     }

@@ -29,7 +29,14 @@ public class RealPathFromUriUtils {
             return getRealPathFromUriBelowAPI19(context, uri);
         }
     }
-
+    public static String getRealVideoPathFromUri(Context context, Uri uri) {
+        int sdkVersion = Build.VERSION.SDK_INT;
+        if (sdkVersion >= 19) { // api >= 19
+            return getRealVideoPathFromUriAboveApi19(context, uri);
+        } else { // api < 19
+            return getRealVideoPathFromUriAboveApi19(context, uri);
+        }
+    }
     /**
      * 适配api19以下(不包括api19),根据uri获取图片的绝对路径
      *
@@ -75,6 +82,31 @@ public class RealPathFromUriUtils {
         return filePath;
     }
 
+    private static String getRealVideoPathFromUriAboveApi19(Context context, Uri uri) {
+        String filePath = null;
+        if (DocumentsContract.isDocumentUri(context, uri)) {
+            // 如果是document类型的 uri, 则通过document id来进行处理
+            String documentId = DocumentsContract.getDocumentId(uri);
+            if (isMediaDocument(uri)) { // MediaProvider
+                // 使用':'分割
+                String id = documentId.split(":")[1];
+
+                String selection = MediaStore.Images.Media._ID + "=?";
+                String[] selectionArgs = {id};
+                filePath = getDataColumn(context, MediaStore.Video.Media.EXTERNAL_CONTENT_URI, selection, selectionArgs);
+            } else if (isDownloadsDocument(uri)) { // DownloadsProvider
+                Uri contentUri = ContentUris.withAppendedId(Uri.parse("content://downloads/public_downloads"), Long.valueOf(documentId));
+                filePath = getDataColumn(context, contentUri, null, null);
+            }
+        } else if ("content".equalsIgnoreCase(uri.getScheme())) {
+            // 如果是 content 类型的 Uri
+            filePath = getDataColumn(context, uri, null, null);
+        } else if ("file".equals(uri.getScheme())) {
+            // 如果是 file 类型的 Uri,直接获取图片对应的路径
+            filePath = uri.getPath();
+        }
+        return filePath;
+    }
     /**
      * 获取数据库表中的 _data 列，即返回Uri对应的文件路径
      *

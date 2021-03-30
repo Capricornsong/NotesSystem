@@ -98,10 +98,10 @@ public class ShareControllerImpl extends Binder implements IShareController {
                 .asClass(CreateShareRD.class)
                 .subscribe(s -> {
                     Log.d(TAG, "CreateShare: message --> " + s.getMsg());
-                    Log.d(TAG, "CreateShare:shareid --> " + s.getDate());
-                    shareid.set(s.getDate());
+                    Log.d(TAG, "CreateShare:shareid --> " + s.getData());
+                    shareid.set(s.getData());
                     if (s.getCode() == 200){
-                        Log.d(TAG, "CreateShare: 成功创建笔记分享！");
+                        Log.d(TAG, "CreateShare: 成功创建笔记分享！" + s.getData());
                     }
                 },throwable -> {
                     Log.d("CreateShare", "创建文本笔记分享失败" + throwable);
@@ -116,10 +116,11 @@ public class ShareControllerImpl extends Binder implements IShareController {
      *
      * @param shareid
      * @return
-     * 只包含以下三项
-     *      "note_id": 1304708347300917250,
-     *      "html_content": "this is html_content2",
-     *      "title": "this  is title2"
+     *      "noteId": 1376816223850536961,
+     *         "title": "img&video test2",
+     *         "content": "img: video",
+     *         "expiredTime": null,
+     *         "htmlContent": "<body>\n img:\n <br>\n <img src alt style=\"max-width:75%\">\n <br>video\n <br>\n <video src=\"http://120.76.128.222:8004/file/1376816267949477890\" style=\"max-width:75%\" controls=\"\" alt=\"http://120.76.128.222:8004/file/1376816267949477890\"></video>\n <br>\n</body>"
      */
     @Override
     public Note GetShare(long shareid) {
@@ -132,16 +133,14 @@ public class ShareControllerImpl extends Binder implements IShareController {
 //                    responseCode.set(s.getCode());
 
                     if (s.getCode() == 200){
-                        Log.d(TAG, "CreateShare: 成功创建笔记分享！");
-                        note.setNoteId(s.getData().getNote_id());
+                        Log.d(TAG, "CreateShare: 成功创建笔记分享！" + s.getData().getHtmlContent());
+                        note.setNoteId(s.getData().getNoteId());
                         note.setTitle(s.getData().getTitle());
-                        note.setHtmlContent(s.getData().getHtml_content());
+                        note.setHtmlContent(s.getData().getHtmlContent());
                     }
-
                 },throwable -> {
                     Log.d("CreateShare", "创建文本笔记分享失败" + throwable);
                 });
-
         return note;
     }
 

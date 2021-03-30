@@ -5,6 +5,38 @@
                 android:layout_height="match_parent" xmlns:app="http://schemas.android.com/apk/res-auto"
                 tools:context=".fragment_navigation.NotesFragment"
                 android:fitsSystemWindows="true">
+    //下拉刷新
+    <com.scwang.smart.refresh.layout.SmartRefreshLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/refreshLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <com.scwang.smart.refresh.header.ClassicsHeader
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/app_color_blue"
+            android:id="@+id/refresh_view"
+            android:layout_alignParentBottom="true"
+            >
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                >
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:overScrollMode="never"
+                android:background="#fff" />
+            <com.scwang.smart.refresh.footer.ClassicsFooter
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+        </LinearLayout>
+        </HorizontalScrollView>
     <ListView
         android:id="@+id/listview_contact"
         android:layout_width="match_parent"
@@ -13,15 +45,15 @@
         android:divider="#FFCCCCCC"
         android:dividerHeight="20dp"
         />
-
-            <com.google.android.material.floatingactionbutton.FloatingActionButton
-                android:id="@+id/add_notes"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_margin="16dp"
-                android:layout_alignParentBottom="true"
-                android:layout_alignParentRight="true"
-                app:srcCompat="@mipmap/add"
-                android:backgroundTint="@color/app_color_blue"
-                />
+    </com.scwang.smart.refresh.layout.SmartRefreshLayout>
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/add_notes"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        app:srcCompat="@mipmap/add"
+        android:backgroundTint="@color/app_color_blue"
+        />
 </RelativeLayout>

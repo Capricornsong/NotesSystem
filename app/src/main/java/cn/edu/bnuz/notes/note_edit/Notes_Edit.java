@@ -129,7 +129,7 @@ public class Notes_Edit extends Activity {
     @BindView(R.id.create_notes)
     FloatingActionButton create_note;
     private String TAG = "Notes_Edit";
-
+    int button_type=0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -155,17 +155,6 @@ public class Notes_Edit extends Activity {
                 overridePendingTransition(R.anim.slide_still, R.anim.slide_out_right);
             }
         });
-
-
-        //分享按钮
-        NotesTopBar.addRightImageButton(R.mipmap.share,R.layout.notes_edit_ui).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-            }
-        });
-
-
         //完成按钮（创建新笔记）
         create_note.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -185,10 +174,7 @@ public class Notes_Edit extends Activity {
                                 String html = mPreview.getText().toString();
                                 Document doc = Jsoup.parseBodyFragment(html);
                                 Element body = doc.body();
-//                                List<String> imagesUrl = new ArrayList<>();
-//                                Elements img = doc.select("img");
-//                                int imgsize = img.size();
-//                                Log.d(TAG, "onClick: imgsize:" + imgsize);
+
                                 Note note = new Note();
                                 note.setTitle(editTitle.getText().toString());
                                 note.setContent(body.text());
@@ -197,50 +183,9 @@ public class Notes_Edit extends Activity {
                                 note.setVersion(1);
                                 //上传新建文件
                                 uploadNewNote(note,doc);
-
-//                                threadExecutor.execute(new Runnable() {
-//                                    @Override
-//                                    public void run() {
-//                                        Looper.prepare();
-//
-//                                        long result = mNoteController.CreateNote(note);
-//                                        Log.d(TAG, "run: 新建笔记结果码：:" + result);
-//                                        if (result > 9999999) {
-//                                            note.setNoteId(result);
-//                                            //准备待上传的文件list
-//                                            for (Element s : img) {
-//                                                Log.d(TAG, "src:" + s.attr("src"));
-//                                                File file = new File(s.attr("src"));
-//                                                String url = mFileTransController.FileUpload(file,result);
-//                                                Log.d(TAG, "run: filesuploadresult:" + url);
-//                                                imagesUrl.add(url);
-//                                            }
-//                                            if (imagesUrl.size() != 0) {
-//                                                //得到urllist：imagesUrl
-//                                                for (int i = 0;i < imgsize;i++){
-//                                                    doc.select("img").get(i).attr("src",imagesUrl.get(i)).attr("alt",imagesUrl.get(i));
-//                                                }
-//                                                //得到替换完成的doc
-//                                                Log.d(TAG, "run: 替换完成的doc" + doc);
-//                                                note.setHtmlContent(doc.body().toString());
-//                                                //修改云端htmlcontent
-//                                                mNoteController.UpdateNoteHtmlContent(note);
-//                                            }
-//
-////                                          mNoteController.UpdateNote(note);
-//                                            Toast.makeText(Notes_Edit.this,"已上传至云端",Toast.LENGTH_LONG).show();
-//                                        }
-//                                        else if (result == 201){
-//                                            //无网络时。具体笔记存储逻辑在CreateNote()方法中
-//                                            Toast.makeText(Notes_Edit.this,"上传失败，已保存在本地",Toast.LENGTH_LONG).show();
-//                                        }
-//                                        else {
-//                                            Toast.makeText(Notes_Edit.this,"保存失败",Toast.LENGTH_LONG).show();
-//                                        }
-//                                        Looper.loop();
-//                                    }
-//                                });
+                                finish();
                             }
+
                         })
                         .addAction("确定", new QMUIDialogAction.ActionListener() {
                             @Override
@@ -264,6 +209,7 @@ public class Notes_Edit extends Activity {
                                     Toast.makeText(Notes_Edit.this, "您的TAG为: " + text, Toast.LENGTH_SHORT).show();
                                     uploadNewNotewithTag(note,doc,text.toString());
                                     dialog.dismiss();
+                                    finish();
                                 } else {
                                     Toast.makeText(Notes_Edit.this, "请填入TAG,如没有TAG请取消", Toast.LENGTH_SHORT).show();
                                 }
@@ -536,6 +482,7 @@ public class Notes_Edit extends Activity {
             public void onClick(View v) {
                 mEditor.focusEditor();
                 ActivityCompat.requestPermissions(Notes_Edit.this, mPermissionList, 100);
+                button_type=1;
             }
         });
 
@@ -554,6 +501,7 @@ public class Notes_Edit extends Activity {
                 intent.setType("video/*");
                 intent.setAction(Intent.ACTION_GET_CONTENT);
                 startActivityForResult(intent, 1);
+                button_type=2;
             }
         });
         //插入链接
@@ -605,12 +553,22 @@ public class Notes_Edit extends Activity {
         }
     }
 
+    /**
+     * 创建笔记时未添加标签
+     * @param note
+     * @param doc
+     */
     public void uploadNewNote(Note note,Document doc){
 
         //准备过滤文件
         List<String> imagesUrl = new ArrayList<>();
+        List<String> videosUrl = new ArrayList<>();
         Elements img = doc.select("img");
+        Elements video = doc.select("video");
         int imgsize = img.size();
+        int videosize = video.size();
+        Log.d(TAG, "uploadNewNote: imgsize" + imgsize);
+        Log.d(TAG, "uploadNewNote: videosize" + videosize);
 
         threadExecutor.execute(new Runnable() {
             @Override
@@ -621,26 +579,43 @@ public class Notes_Edit extends Activity {
                 Log.d(TAG, "run: 新建笔记结果码：:" + result);
                 if (result > 9999999) {
                     note.setNoteId(result);
-                    //准备待上传的文件list
-                    for (Element s : img) {
-                        Log.d(TAG, "src:" + s.attr("src"));
-                        File file = new File(s.attr("src"));
-                        String url = mFileTransController.FileUpload(file,result);
-                        Log.d(TAG, "run: filesuploadresult:" + url);
-                        imagesUrl.add(url);
-                    }
-                    if (imagesUrl.size() != 0) {
-                        //得到urllist：imagesUrl
-                        for (int i = 0;i < imgsize;i++){
+
+                    //准备待上传的图片list
+                    if (imgsize != 0) {
+                        for (Element s : img) {
+                            Log.d(TAG, "src:" + s.attr("src"));
+                            File file = new File(s.attr("src"));
+                            String url = mFileTransController.FileUpload(file,result);
+                            Log.d(TAG, "run: filesuploadresult:" + url);
+                            imagesUrl.add(url);
+                        }
+                        //得到urllist：imagesUrl，开始上传
+                        for (int i = 0;i < imagesUrl.size();i++){
                             doc.select("img").get(i).attr("src",imagesUrl.get(i)).attr("alt",imagesUrl.get(i));
                         }
+                    }
+                    //准备待上传的视频list
+                    if (videosize != 0) {
+                        for (Element s : video) {
+                            Log.d(TAG, "src:" + s.attr("src"));
+                            File file = new File(s.attr("src"));
+                            String url = mFileTransController.FileUpload(file,result);
+                            Log.d(TAG, "run: filesuploadresult:" + url);
+                            videosUrl.add(url);
+                        }
+                        //得到urllist：videosUrl，开始上传
+                        for (int i = 0;i < videosUrl.size();i++){
+                            doc.select("video").get(i).attr("src",videosUrl.get(i)).attr("alt",videosUrl.get(i));
+                        }
+                    }
+
+                    if (!(videosize == 0 && imgsize == 0)) {
                         //得到替换完成的doc
                         Log.d(TAG, "run: 替换完成的doc" + doc);
                         note.setHtmlContent(doc.body().toString());
                         //修改云端htmlcontent
                         mNoteController.UpdateNoteHtmlContent(note);
                     }
-
 //                                          mNoteController.UpdateNote(note);
                     Toast.makeText(Notes_Edit.this,"已上传至云端",Toast.LENGTH_LONG).show();
                 }
@@ -657,35 +632,60 @@ public class Notes_Edit extends Activity {
         });
     }
 
+
+    /**
+     * 创建笔记时添加标签
+     * @param note
+     * @param doc
+     * @param tagName
+     */
     public void uploadNewNotewithTag(Note note,Document doc,String tagName){
 
         //准备过滤文件
         List<String> imagesUrl = new ArrayList<>();
+        List<String> videosUrl = new ArrayList<>();
         Elements img = doc.select("img");
+        Elements video = doc.select("video");
         int imgsize = img.size();
-
+        int videosize = video.size();
         threadExecutor.execute(new Runnable() {
             @Override
             public void run() {
                 Looper.prepare();
-
                 long result = mNoteController.CreateNote(note);
                 Log.d(TAG, "run: 新建笔记结果码：:" + result);
                 if (result > 9999999) {
                     note.setNoteId(result);
-                    //准备待上传的文件list
-                    for (Element s : img) {
-                        Log.d(TAG, "src:" + s.attr("src"));
-                        File file = new File(s.attr("src"));
-                        String url = mFileTransController.FileUpload(file,result);
-                        Log.d(TAG, "run: filesuploadresult:" + url);
-                        imagesUrl.add(url);
-                    }
-                    if (imagesUrl.size() != 0) {
-                        //得到urllist：imagesUrl
+                    //准备待上传的图片list
+                    if (imgsize != 0) {
+                        for (Element s : img) {
+                            Log.d(TAG, "src:" + s.attr("src"));
+                            File file = new File(s.attr("src"));
+                            String url = mFileTransController.FileUpload(file,result);
+                            Log.d(TAG, "run: filesuploadresult:" + url);
+                            imagesUrl.add(url);
+                        }
+                        //得到urllist：imagesUrl，开始上传
                         for (int i = 0;i < imgsize;i++){
                             doc.select("img").get(i).attr("src",imagesUrl.get(i)).attr("alt",imagesUrl.get(i));
                         }
+                    }
+                    //准备待上传的视频list
+                    if (videosize != 0) {
+                        for (Element s : video) {
+                            Log.d(TAG, "src:" + s.attr("src"));
+                            File file = new File(s.attr("src"));
+                            String url = mFileTransController.FileUpload(file,result);
+                            Log.d(TAG, "run: filesuploadresult:" + url);
+                            videosUrl.add(url);
+                        }
+                        //得到urllist：videosUrl，开始上传
+                        for (int i = 0;i < imgsize;i++){
+                            doc.select("video").get(i).attr("src",videosUrl.get(i)).attr("alt",videosUrl.get(i));
+                        }
+                    }
+
+                    if (!(videosize == 0 && imgsize == 0)) {
                         //得到替换完成的doc
                         Log.d(TAG, "run: 替换完成的doc" + doc);
                         note.setHtmlContent(doc.body().toString());
@@ -725,16 +725,23 @@ public class Notes_Edit extends Activity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == Activity.RESULT_OK) {
-            switch (requestCode) {
-                case 1:
-                    if (data != null) {
-                        String realPathFromUri = RealPathFromUriUtils.getRealPathFromUri(this, data.getData());
-                        mEditor.insertImage(realPathFromUri, realPathFromUri + "\" style=\"max-width:75%");
-                    } else {
-                        Toast.makeText(this, "图片损坏，请重新选择", Toast.LENGTH_SHORT).show();
-                    }
-
-                    break;
+            if(button_type==1) {
+                if (data != null) {
+                    String realPathFromUri = RealPathFromUriUtils.getRealPathFromUri(this, data.getData());
+                    mEditor.insertImage(realPathFromUri, realPathFromUri + "\" style=\"max-width:75%");
+                } else {
+                    Toast.makeText(this, "图片损坏，请重新选择", Toast.LENGTH_SHORT).show();
+                }
+            }
+            if(button_type==2) {
+                if (data != null) {
+                    Uri uri = data.getData();
+//                    String realVideoPathFromUri1=uri.toString();
+                    String realVideoPathFromUri=RealPathFromUriUtils.getRealVideoPathFromUri(this,data.getData());
+                    mEditor.insertVideo(realVideoPathFromUri+"\" style=\"max-width:75%");
+                } else {
+                    Toast.makeText(this, "视频损坏，请重新选择", Toast.LENGTH_SHORT).show();
+                }
             }
         }
     }

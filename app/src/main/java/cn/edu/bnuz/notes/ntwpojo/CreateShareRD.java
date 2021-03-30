@@ -2,14 +2,14 @@ package cn.edu.bnuz.notes.ntwpojo;
 
 public class CreateShareRD extends BaseRD {
 
-    private long date;
+    public long data;
 
-    public long getDate() {
-        return date;
+    public long getData() {
+        return data;
     }
 
-    public void setDate(long date) {
-        this.date = date;
+    public void setData(long data) {
+        this.data = data;
     }
 
 }

@@ -1,7 +1,5 @@
 package cn.edu.bnuz.notes.ntwpojo;
 
-import java.util.List;
-
 public class GetSharebyIdRD extends BaseRD {
 
     private DataBean data;
@@ -21,24 +19,33 @@ public class GetSharebyIdRD extends BaseRD {
          * title : this  is title2
          */
 
-        private long note_id;
-        private String html_content;
+        private long noteId;
+        private String htmlContent;
         private String title;
+        private String content;
 
-        public long getNote_id() {
-            return note_id;
+        public String getContent() {
+            return content;
         }
 
-        public void setNote_id(long note_id) {
-            this.note_id = note_id;
+        public void setContent(String content) {
+            this.content = content;
         }
 
-        public String getHtml_content() {
-            return html_content;
+        public long getNoteId() {
+            return noteId;
         }
 
-        public void setHtml_content(String html_content) {
-            this.html_content = html_content;
+        public void setNoteId(long noteId) {
+            this.noteId = noteId;
+        }
+
+        public String getHtmlContent() {
+            return htmlContent;
+        }
+
+        public void setHtmlContent(String htmlContent) {
+            this.htmlContent = htmlContent;
         }
 
         public String getTitle() {

@@ -8,11 +8,13 @@ import android.content.ServiceConnection;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.drawable.Drawable;
 import android.os.IBinder;
+import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.*;
 import cn.edu.bnuz.notes.login_register.Login;
+import cn.edu.bnuz.notes.pojo.Note;
 import cn.edu.bnuz.notes.websocket.WebSocketClientService;
 import android.os.Bundle;
 import androidx.core.content.ContextCompat;
@@ -35,23 +37,31 @@ import cn.edu.bnuz.notes.interfaces.ITokenController;
 import rxhttp.RxHttpPlugins;
 import rxhttp.wrapper.cahce.CacheMode;
 
+import com.qmuiteam.qmui.skin.QMUISkinManager;
 import com.qmuiteam.qmui.util.QMUIStatusBarHelper;
 import com.qmuiteam.qmui.widget.QMUITopBar;
 import com.qmuiteam.qmui.widget.dialog.QMUIDialog;
 import com.qmuiteam.qmui.widget.dialog.QMUIDialogAction;
+import com.scwang.smart.refresh.layout.listener.OnRefreshListener;
+
 import cn.edu.bnuz.notes.login_register.Login;
 import cn.edu.bnuz.notes.websocket.WebSocketClientService;
+
+import static cn.edu.bnuz.notes.MyApplication.mShareController;
 import static cn.edu.bnuz.notes.MyApplication.myWebSocketClient;
 import static cn.edu.bnuz.notes.MyApplication.threadExecutor;
 import static cn.edu.bnuz.notes.constants.destPath;
 
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.client.WebSocketClient;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.litepal.LitePal;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 import static cn.edu.bnuz.notes.MyApplication.mFileConnection;
 import static cn.edu.bnuz.notes.MyApplication.mFileTransConnection;
@@ -60,6 +70,8 @@ import static cn.edu.bnuz.notes.MyApplication.mNoteConnection;
 import static cn.edu.bnuz.notes.MyApplication.mShareConnection;
 import static cn.edu.bnuz.notes.MyApplication.mTagConnection;
 import static cn.edu.bnuz.notes.MyApplication.mTokenConnection;
+import static cn.edu.bnuz.notes.utils.util.NetCheck;
+import static org.litepal.LitePalApplication.getContext;
 
 public class MainActivity extends FragmentActivity {
     @BindView(R.id.fragment_vp) ViewPager mViewPager;
@@ -74,7 +86,7 @@ public class MainActivity extends FragmentActivity {
     private WebSocketClient client;
     private WebSocketClientService.WebSocketClientBinder binder;
     private WebSocketClientService WebSClientService;
-
+    private Note note;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -118,6 +130,95 @@ public class MainActivity extends FragmentActivity {
         mViewPager.setAdapter(mAdapter);
         mViewPager.addOnPageChangeListener(mPageChangeListener);
         mTabRadioGroup.setOnCheckedChangeListener(mOnCheckedChangeListener);
+        mTopBar.addLeftImageButton(R.mipmap.share,R.layout.notes_edit_ui).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //创建一个CountDownLatch类，构造入参线程数
+                CountDownLatch countDownLatch = new CountDownLatch(1);
+                note = new Note();
+                if (NetCheck()) {
+                    final QMUIDialog.EditTextDialogBuilder builder = new QMUIDialog.EditTextDialogBuilder(MainActivity.this);
+                    builder.setTitle("打开分享笔记")
+                            .setSkinManager(QMUISkinManager.defaultInstance(getContext()))
+                            .setPlaceholder("在此输入笔记的分享id")
+                            .setInputType(InputType.TYPE_CLASS_TEXT)
+                            .addAction("取消", new QMUIDialogAction.ActionListener() {
+                                @Override
+                                public void onClick(QMUIDialog dialog, int index) {
+                                    dialog.dismiss();
+                                }
+                            })
+                            .addAction("确定", new QMUIDialogAction.ActionListener() {
+                                @Override
+                                public void onClick(QMUIDialog dialog, int index) {
+                                    CharSequence text = builder.getEditText().getText();
+                                    if (text.length() == 0) {
+                                        Toast.makeText(MainActivity.this, "请输入分享ID", Toast.LENGTH_SHORT).show();
+                                    }
+                                    else{
+                                        threadExecutor.execute(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                note = mShareController.GetShare(Long.parseLong(text.toString()));
+                                                countDownLatch.countDown();
+                                            }
+                                        });
+                                        //等待上方线程执行完
+                                        try {
+                                            countDownLatch.await();
+                                        } catch (InterruptedException e) {
+                                            e.printStackTrace();
+                                        }
+                                        if (note == null) {
+                                            Toast.makeText(MainActivity.this, "输入有误", Toast.LENGTH_SHORT).show();
+                                            dialog.dismiss();
+                                        }
+                                        else {
+                                            Intent intent = new Intent(getContext(), notes_show.class);
+                                            Bundle bundle = new Bundle();
+                                            Log.d(TAG, "onClick: htmlcontent" + note.getHtmlContent());
+                                            //把笔记数据传给下个activity
+                                            bundle.putString("title",note.getTitle());
+                                            bundle.putString("htmlcontent",note.getHtmlContent());
+                                            bundle.putLong("noteid",note.getNoteId());
+                                            intent.putExtras(bundle);
+                                            //显示笔记详情
+                                            startActivity(intent);
+                                        }
+                                    }
+                                }
+                            })
+                            .create(R.style.QMUI_Dialog).show();
+                }
+                else{
+
+                }
+            }
+        });
+        mTopBar.addRightImageButton(R.mipmap.tree_tag,R.layout.activity_main).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new QMUIDialog.MessageDialogBuilder(MainActivity.this)
+                        .setTitle("Tag选择")
+                        .setMessage("这是Tag选择按钮")
+                        .addAction("取消", new QMUIDialogAction.ActionListener() {
+                            @Override
+                            public void onClick(QMUIDialog dialog, int index) {
+                                dialog.dismiss();
+                                Toast.makeText(MainActivity.this, "取消", Toast.LENGTH_SHORT).show();
+
+                            }
+                        })
+                        .addAction("确定", new QMUIDialogAction.ActionListener() {
+                            @Override
+                            public void onClick(QMUIDialog dialog, int index) {
+                                dialog.dismiss();
+                                Toast.makeText(MainActivity.this, "确定", Toast.LENGTH_SHORT).show();
+                            }
+                        })
+                        .show();
+            }
+        });
     }
 
     /**
@@ -213,8 +314,98 @@ public class MainActivity extends FragmentActivity {
                         mTopBar.removeAllLeftViews();
                         mTopBar.setTitle("笔记");
                         mTopBar.setTitleGravity(0);
+                        mTopBar.addLeftImageButton(R.mipmap.share,R.layout.notes_edit_ui).setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                //创建一个CountDownLatch类，构造入参线程数
+                                CountDownLatch countDownLatch = new CountDownLatch(1);
+                                note = new Note();
+                                if (NetCheck()) {
+                                    final QMUIDialog.EditTextDialogBuilder builder = new QMUIDialog.EditTextDialogBuilder(MainActivity.this);
+                                    builder.setTitle("打开分享笔记")
+                                            .setSkinManager(QMUISkinManager.defaultInstance(getContext()))
+                                            .setPlaceholder("在此输入笔记的分享id")
+                                            .setInputType(InputType.TYPE_CLASS_TEXT)
+                                            .addAction("取消", new QMUIDialogAction.ActionListener() {
+                                                @Override
+                                                public void onClick(QMUIDialog dialog, int index) {
+                                                    dialog.dismiss();
+                                                }
+                                            })
+                                            .addAction("确定", new QMUIDialogAction.ActionListener() {
+                                                @Override
+                                                public void onClick(QMUIDialog dialog, int index) {
+                                                    CharSequence text = builder.getEditText().getText();
+                                                    if (text.length() == 0) {
+                                                        Toast.makeText(MainActivity.this, "请输入分享ID", Toast.LENGTH_SHORT).show();
+                                                    }
+                                                    else{
+                                                        threadExecutor.execute(new Runnable() {
+                                                            @Override
+                                                            public void run() {
+                                                                note = mShareController.GetShare(Long.parseLong(text.toString()));
+                                                                countDownLatch.countDown();
+                                                            }
+                                                        });
+                                                        //等待上方线程执行完
+                                                        try {
+                                                            countDownLatch.await();
+                                                        } catch (InterruptedException e) {
+                                                            e.printStackTrace();
+                                                        }
+                                                        if (note == null) {
+                                                            Toast.makeText(MainActivity.this, "输入有误", Toast.LENGTH_SHORT).show();
+                                                            dialog.dismiss();
+                                                        }
+                                                        else {
+                                                            Intent intent = new Intent(getContext(), notes_show.class);
+                                                            Bundle bundle = new Bundle();
+                                                            //把笔记数据传给下个activity
+                                                            bundle.putString("title",note.getTitle());
+                                                            bundle.putString("htmlcontent",note.getHtmlContent());
+                                                            bundle.putLong("noteid",note.getNoteId());
+                                                            intent.putExtras(bundle);
+                                                            //显示笔记详情
+                                                            startActivity(intent);
+                                                        }
+                                                    }
+                                                }
+                                            })
+                                            .create(R.style.QMUI_Dialog).show();
+                                }
+                                else{
+
+                                }
+                            }
+                        });
+                        mTopBar.addRightImageButton(R.mipmap.tree_tag,R.layout.activity_main).setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                new QMUIDialog.MessageDialogBuilder(MainActivity.this)
+                                        .setTitle("Tag选择")
+                                        .setMessage("这是Tag选择按钮")
+                                        .addAction("取消", new QMUIDialogAction.ActionListener() {
+                                            @Override
+                                            public void onClick(QMUIDialog dialog, int index) {
+                                                dialog.dismiss();
+                                                Toast.makeText(MainActivity.this, "取消", Toast.LENGTH_SHORT).show();
+
+                                            }
+                                        })
+                                        .addAction("确定", new QMUIDialogAction.ActionListener() {
+                                            @Override
+                                            public void onClick(QMUIDialog dialog, int index) {
+                                                dialog.dismiss();
+                                                Toast.makeText(MainActivity.this, "确定", Toast.LENGTH_SHORT).show();
+                                            }
+                                        })
+                                        .show();
+                            }
+                        });
                     }
                     if(i==1) {
+                        mTopBar.removeAllRightViews();
+                        mTopBar.removeAllLeftViews();
                         mTopBar.setTitle("知识树");
                         mTopBar.setTitleGravity(0);
                         mTopBar.addRightImageButton(R.mipmap.tree_tag,R.layout.activity_main).setOnClickListener(new View.OnClickListener() {

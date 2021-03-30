@@ -29,7 +29,8 @@
             android:id="@+id/editTitle"
             android:layout_width="match_parent"
             android:layout_height="60dp"
-            android:hint="  请输入标题" />
+            android:hint="  请输入标题"
+            android:lines="1"/>
 
         <jp.wasabeef.richeditor.RichEditor
         android:id="@+id/richeditor"
@@ -66,6 +67,13 @@
                     android:background="@null"
                     android:contentDescription="@null"
                     android:src="@drawable/insert_image"/>
+            <ImageButton
+                android:id="@+id/action_insert_video"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="@null"
+                android:contentDescription="@null"
+                android:src="@drawable/video"/>
             <ImageButton
                     android:id="@+id/action_undo"
                     android:layout_width="48dp"
@@ -267,14 +275,6 @@
                     android:background="@null"
                     android:contentDescription="@null"
                     android:src="@drawable/music"/>
-
-            <ImageButton
-                    android:id="@+id/action_insert_video"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:background="@null"
-                    android:contentDescription="@null"
-                    android:src="@drawable/video"/>
 
             <ImageButton
                     android:id="@+id/action_insert_link"

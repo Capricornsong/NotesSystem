@@ -6,10 +6,14 @@ import androidx.core.app.ActivityCompat;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Looper;
@@ -30,6 +34,11 @@ import com.qmuiteam.qmui.util.QMUIStatusBarHelper;
 import com.qmuiteam.qmui.widget.QMUITopBar;
 import com.qmuiteam.qmui.widget.dialog.QMUIDialog;
 import com.qmuiteam.qmui.widget.dialog.QMUIDialogAction;
+import com.scwang.smart.refresh.footer.ClassicsFooter;
+import com.scwang.smart.refresh.header.ClassicsHeader;
+import com.scwang.smart.refresh.layout.api.RefreshLayout;
+import com.scwang.smart.refresh.layout.listener.OnLoadMoreListener;
+import com.scwang.smart.refresh.layout.listener.OnRefreshListener;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -40,6 +49,7 @@ import org.litepal.LitePal;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -50,6 +60,8 @@ import jp.wasabeef.richeditor.RichEditor;
 
 import static cn.edu.bnuz.notes.MyApplication.mFileTransController;
 import static cn.edu.bnuz.notes.MyApplication.mNoteController;
+import static cn.edu.bnuz.notes.MyApplication.mShareConnection;
+import static cn.edu.bnuz.notes.MyApplication.mShareController;
 import static cn.edu.bnuz.notes.MyApplication.threadExecutor;
 import static cn.edu.bnuz.notes.utils.util.NetCheck;
 import static org.litepal.LitePalApplication.getContext;
@@ -125,7 +137,7 @@ public class  notes_show extends Activity {
     EditText title_show;
     @BindView(R.id.save_notes)
     FloatingActionButton save_note;
-
+    int button_type=0;
     private String TAG = "Notes_Show";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -162,10 +174,49 @@ public class  notes_show extends Activity {
         });
         //分享按钮
         NotesTopBar.addRightImageButton(R.mipmap.share,R.layout.notes_edit_ui).setOnClickListener(new View.OnClickListener() {
+            //创建一个CountDownLatch类，构造入参线程数
+            CountDownLatch countDownLatch1 = new CountDownLatch(1);
+            Long NoteShareid = 0L;
             @Override
             public void onClick(View v) {
                 if (NetCheck()) {
+                    threadExecutor.execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            NoteShareid = mShareController.CreateShare(noteid);
+                            countDownLatch1.countDown();
+                        }
+                    });
+                    //等待上方线程执行完
+                    try {
+                        countDownLatch1.await();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    Log.d(TAG, "onClick: noteid" + noteid);
 
+                    new QMUIDialog.MessageDialogBuilder(notes_show.this)
+                            .setTitle("请复制下方分享ID")
+                            .setMessage(Long.toString(NoteShareid))
+                            .addAction("取消", new QMUIDialogAction.ActionListener() {
+                                @Override
+                                public void onClick(QMUIDialog dialog, int index) {
+                                    dialog.dismiss();
+                                }
+                            })
+                            .addAction("复制", new QMUIDialogAction.ActionListener() {
+                                @Override
+                                public void onClick(QMUIDialog dialog, int index) {
+                                    ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                                    // 创建普通字符型ClipData
+                                    ClipData mClipData = ClipData.newPlainText("Label", Long.toString(NoteShareid));
+                                    // 将ClipData内容放到系统剪贴板里。
+                                    cm.setPrimaryClip(mClipData);
+                                    Toast.makeText(notes_show.this, "已复制", Toast.LENGTH_SHORT).show();
+                                    dialog.dismiss();
+                                }
+                            })
+                            .show();
                 }
                 else{
 
@@ -567,6 +618,7 @@ public class  notes_show extends Activity {
             public void onClick(View v) {
                 mEditor.focusEditor();
                 ActivityCompat.requestPermissions(notes_show.this, mPermissionList, 100);
+                button_type=1;
             }
         });
 
@@ -581,7 +633,11 @@ public class  notes_show extends Activity {
         insert_video.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mEditor.insertVideo("https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/1080/Big_Buck_Bunny_1080_10s_10MB.mp4", 360);
+                Intent intent = new Intent();
+                intent.setType("video/*");
+                intent.setAction(Intent.ACTION_GET_CONTENT);
+                startActivityForResult(intent, 1);
+                button_type=2;
             }
         });
         //插入链接
@@ -621,9 +677,14 @@ public class  notes_show extends Activity {
         Document doc = Jsoup.parseBodyFragment(note.getHtmlContent());
         Element body = doc.body();
 
+        //准备过滤文件
         List<String> imagesUrl = new ArrayList<>();
+        List<String> videosUrl = new ArrayList<>();
         Elements img = doc.select("img");
+        Elements video = doc.select("video");
         int imgsize = img.size();
+        int videosize = video.size();
+
         Log.d(TAG, "onClick: imgsize:" + imgsize);
 
         threadExecutor.execute(new Runnable() {
@@ -633,20 +694,20 @@ public class  notes_show extends Activity {
                 long result = mNoteController.UpdateNote(note);
                 Log.d(TAG, "run: 修改笔记结果码：:" + result);
                 if (result == 200) {
-                    //准备待上传的文件list
-                    for (Element s : img) {
-                        if (!(s.attr("src").contains("http:/"))) {
-                            Log.d(TAG, "src:" + s.attr("src"));
-                            File file = new File(s.attr("src"));
-                            String url = mFileTransController.FileUpload(file,note.getNoteId());
-                            Log.d(TAG, "run: filesuploadresult:" + url);
-                            imagesUrl.add(url);
-                        }
-                    }
-                    Log.d(TAG, "run: imagesize" + imgsize);
                     if (imgsize != 0) {
+                        //准备待上传的文件list
+                        for (Element s : img) {
+                            if (!(s.attr("src").contains("http:/"))) {
+                                Log.d(TAG, "src:" + s.attr("src"));
+                                File file = new File(s.attr("src"));
+                                String url = mFileTransController.FileUpload(file,note.getNoteId());
+                                Log.d(TAG, "run: filesuploadresult:" + url);
+                                imagesUrl.add(url);
+                            }
+                        }
+                        Log.d(TAG, "run: imagesize" + imgsize);
                         //得到urllist：imagesUrl
-                        for (int i = 0;i < imgsize;i++){
+                        for (int i = 0;i < imagesUrl.size();i++){
                             doc.select("img").get(i).attr("src",imagesUrl.get(i)).attr("alt",imagesUrl.get(i));
                         }
                         //得到替换完成的doc
@@ -654,8 +715,33 @@ public class  notes_show extends Activity {
                         note.setHtmlContent(doc.body().toString());
                         //修改云端htmlcontent
                         mNoteController.UpdateNoteHtmlContent(note);
-//                          mNoteController.UpdateNote(note);
                     }
+
+                    if (videosize != 0) {
+                        //准备待上传的文件list
+                        for (Element s : video) {
+                            if (!(s.attr("src").contains("http:/"))) {
+                                Log.d(TAG, "src:" + s.attr("src"));
+                                File file = new File(s.attr("src"));
+                                String url = mFileTransController.FileUpload(file,note.getNoteId());
+                                Log.d(TAG, "run: filesuploadresult:" + url);
+                                videosUrl.add(url);
+                            }
+                        }
+                        Log.d(TAG, "run: viedeosize" + videosize);
+                        //得到urllist：videosUrl
+                        for (int i = 0;i < videosUrl.size();i++){
+                            doc.select("video").get(i).attr("src",videosUrl.get(i)).attr("alt",videosUrl.get(i));
+                        }
+                    }
+                    if(!(videosUrl.size() == 0 && imagesUrl.size() == 0)) {
+                        //得到替换完成的doc
+                        Log.d(TAG, "run: 替换完成的doc" + doc);
+                        note.setHtmlContent(doc.body().toString());
+                        //修改云端htmlcontent
+                        mNoteController.UpdateNoteHtmlContent(note);
+                    }
+
                     Toast.makeText(notes_show.this,"已上传至云端",Toast.LENGTH_LONG).show();
                 }
                 else if (result == 201){
@@ -718,17 +804,25 @@ public class  notes_show extends Activity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == Activity.RESULT_OK) {
-            switch (requestCode) {
-                case 1:
-                    if (data != null) {
-                        String realPathFromUri = RealPathFromUriUtils.getRealPathFromUri(this, data.getData());
-                        mEditor.insertImage(realPathFromUri, realPathFromUri + "\" style=\"max-width:75%");
-                    } else {
-                        Toast.makeText(this, "图片损坏，请重新选择", Toast.LENGTH_SHORT).show();
-                    }
-
-                    break;
+            if(button_type==1) {
+                if (data != null) {
+                    String realPathFromUri = RealPathFromUriUtils.getRealPathFromUri(this, data.getData());
+                    mEditor.insertImage(realPathFromUri, realPathFromUri + "\" style=\"max-width:75%");
+                } else {
+                    Toast.makeText(this, "图片损坏，请重新选择", Toast.LENGTH_SHORT).show();
+                }
+            }
+            if(button_type==2) {
+                if (data != null) {
+                    Uri uri = data.getData();
+//                    String realVideoPathFromUri1=uri.toString();
+                    String realVideoPathFromUri=RealPathFromUriUtils.getRealVideoPathFromUri(this,data.getData());
+                    mEditor.insertVideo(realVideoPathFromUri+"\" style=\"max-width:75%");
+                } else {
+                    Toast.makeText(this, "视频损坏，请重新选择", Toast.LENGTH_SHORT).show();
+                }
             }
         }
     }
+
 }

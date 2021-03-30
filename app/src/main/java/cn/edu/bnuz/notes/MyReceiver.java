@@ -82,6 +82,8 @@ public class MyReceiver extends BroadcastReceiver {
 
 
     public void uploadNotes(List<Note> notes){
+
+//        mNoteController.up
         for(Note note : notes){
             //获取本地创建的未上传的新笔记
             Log.d(TAG, "IsSyn:" + note.getIsSyn() + " notetitle:" + note.getTitle());

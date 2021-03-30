@@ -162,7 +162,7 @@ public class MyApplication extends Application {
 
     //ShareController
     public static MyApplication.ShareConnection mShareConnection;
-    private static IShareController mShareController;
+    public static IShareController mShareController;
     private class ShareConnection implements ServiceConnection {
 
         @Override
