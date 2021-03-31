@@ -669,8 +669,7 @@ public class  notes_show extends Activity {
         });
     }
 
-    //断网编辑后退出
-    //联网不编辑推出
+
     //联网编辑后推出
     public void onEdit(Note note){
 

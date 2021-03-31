@@ -80,11 +80,12 @@ public class Register extends Activity {
                     @Override
                     public void run() {
                         Looper.prepare();
+
                         if (mTokenController.UsernameCheck(user_name.getText().toString()) != 200){
                             Toast.makeText(Register.this,"用户已被使用",Toast.LENGTH_LONG).show();
                         }
                         else {
-                            int result = mTokenController.Register(user_name.getText().toString(),user_email.getText().toString(),email_verifycode.getText().toString(),user_password.getText().toString());
+                            int  result = mTokenController.Register(user_name.getText().toString(),user_email.getText().toString(),email_verifycode.getText().toString(),user_password.getText().toString());
                             Log.d(TAG, "result: " + result);
                             if (result==200) {
                                 Toast.makeText(Register.this,"注册成功",Toast.LENGTH_LONG).show();
@@ -102,32 +103,32 @@ public class Register extends Activity {
                         Looper.loop();
                     }
                 });
-
-
-//                threadExecutor.execute(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        Looper.prepare();
-//
-//                        Looper.loop();
-//                    }
-//                });
             }
         });
+        //发送验证码
         btn_verifycode.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(Register.this,user_email.getText().toString(),Toast.LENGTH_LONG).show();
+//                Toast.makeText(Register.this,user_email.getText().toString(),Toast.LENGTH_LONG).show();
                 threadExecutor.execute(new Runnable() {
                     @Override
                     public void run() {
                         Looper.prepare();
-                        if (mTokenController.SendEmailCode(user_email.getText().toString()) == 200) {
-                            Toast.makeText(Register.this,"已发送验证吗",Toast.LENGTH_LONG).show();
+                        int code = mTokenController.EmailCheck(user_email.getText().toString());
+                        if (code == 200) {
+                            if (mTokenController.SendEmailCode(user_email.getText().toString()) == 200) {
+                                Toast.makeText(Register.this,"已发送验证码",Toast.LENGTH_LONG).show();
+                            }
+                            else{
+                                Toast.makeText(Register.this,"发送验证码失败",Toast.LENGTH_LONG).show();
+                            }
                         }
-                        else{
+                        //邮箱已被注册
+                        else if(code == 10002){
+                            Toast.makeText(Register.this,"该邮箱已被注册",Toast.LENGTH_LONG).show();
+                        }
+                        else
                             Toast.makeText(Register.this,"发送验证码失败",Toast.LENGTH_LONG).show();
-                        }
                         Looper.loop();
                     }
                 });

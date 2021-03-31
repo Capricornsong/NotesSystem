@@ -57,7 +57,6 @@ public class TokenControllerImpl extends Binder implements ITokenController{
     @Override
     public int EmailCheck(String email) {
         AtomicInteger result = new AtomicInteger();
-
         get("/user/email/" + email)
                 .setDomainToauthIfAbsent()  //指定使用auth url
                 .setSync()
@@ -76,6 +75,11 @@ public class TokenControllerImpl extends Binder implements ITokenController{
         return result.get();
     }
 
+    /**
+     * 检查用户名是否已存在
+     * @param username
+     * @return
+     */
     @Override
     public int UsernameCheck(String username) {
         AtomicInteger result = new AtomicInteger();
@@ -97,6 +101,11 @@ public class TokenControllerImpl extends Binder implements ITokenController{
         return result.get();
     }
 
+    /**
+     * 发送验证码
+     * @param email
+     * @return
+     */
     @Override
     public int SendEmailCode(String email) {
         AtomicInteger result = new AtomicInteger();
@@ -135,8 +144,8 @@ public class TokenControllerImpl extends Binder implements ITokenController{
         JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty("checkCode",checkcode);
         jsonObject.addProperty("email",email);
-        jsonObject.addProperty("password",username);
-        jsonObject.addProperty("username", password);
+        jsonObject.addProperty("password",password);
+        jsonObject.addProperty("username", username);
         Log.d(TAG, "Register: json:" + jsonObject.toString());
         postJson("/user")
                 .setSync()
@@ -145,7 +154,7 @@ public class TokenControllerImpl extends Binder implements ITokenController{
                 .addAll(jsonObject)
                 .asClass(RegisterRD.class)
                 .subscribe(c -> {
-                    Log.d("GetNoteByNoteID", "code: " + c.getMsg());
+                    Log.d(TAG, "code: " + c.getMsg());
                     result.set(c.getCode());
                     if (c.getCode() == 200){
                         Log.d(TAG, "Register: 成功注册！");

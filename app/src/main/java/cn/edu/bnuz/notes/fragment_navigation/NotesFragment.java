@@ -83,7 +83,7 @@ public class NotesFragment extends Fragment {
     private List<String> mFilespPath = new ArrayList<>();
     private Note mNote;
     private List<GetFilesbyNoteId.DataBean> mFileList = new ArrayList<>();
-    private final List<Note> mNotelist = LitePal.where("isDelete == ?","0").find(Note.class);       //用于存储从本地获取的笔记
+    private final List<Note> mNotelist = LitePal.where("isDelete == ?  and userid == ?","0",).find(Note.class);       //用于存储从本地获取的笔记
     public NotesFragment() {
         // Required empty public constructor
     }
