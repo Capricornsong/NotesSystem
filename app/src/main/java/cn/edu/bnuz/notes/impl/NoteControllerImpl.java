@@ -1,11 +1,10 @@
 package cn.edu.bnuz.notes.impl;
 
+import android.annotation.SuppressLint;
 import android.os.Binder;
 import android.util.Log;
 
 import org.litepal.LitePal;
-import org.litepal.crud.LitePalSupport;
-import org.litepal.exceptions.DataSupportException;
 
 import cn.edu.bnuz.notes.interfaces.INoteController;
 import cn.edu.bnuz.notes.ntwpojo.AddTagtoNoteRD;
@@ -13,6 +12,7 @@ import cn.edu.bnuz.notes.ntwpojo.DeleteNoteTagShareEmailCheckUsernameCheckRD;
 import cn.edu.bnuz.notes.ntwpojo.NetNoteRD;
 import cn.edu.bnuz.notes.ntwpojo.NoteSearchRD;
 import cn.edu.bnuz.notes.ntwpojo.NotesbyPageorTagIdRD;
+import cn.edu.bnuz.notes.ntwpojo.TagsFilter;
 import cn.edu.bnuz.notes.pojo.Note;
 import cn.edu.bnuz.notes.pojo.Token;
 import static cn.edu.bnuz.notes.MyApplication.myWebSocketClient;
@@ -479,13 +479,31 @@ public class NoteControllerImpl extends Binder implements INoteController{
      *      "title": "666",
      *      "content": "123456"
      */
+    @SuppressLint("CheckResult")
     @Override
-    public List<NotesbyPageorTagIdRD.NotesPkg> GetNotesbyTags(List<String> tags, int pageNo, int pageSize) {
-//        RxHttp.postJson("/note/tags/" + pageNo + "/" + pageSize)
-//                .setSync()
-//                .add
-        return null;
+    public TagsFilter.DataBean GetNotesbyTags(List<String> tags, int pageNo, int pageSize) {
 
+        TagsFilter.DataBean notelist = new TagsFilter.DataBean();
+        notelist.notes = new ArrayList<>();
+        RxHttp.postJson("/note/tags/" + pageNo + "/" + pageSize)
+                .setSync()
+                .add("tags",tags)
+                .asClass(TagsFilter.class)
+                .subscribe(TNL -> {
+//                    Log.d(TAG, "GetNotesbyTags: " + TNL);
+                    Log.d(TAG, "GetNotesByKey: " + TNL.getCode());
+                    if (TNL.getCode() == 200){
+                        Log.d(TAG, "GetNotesbyTags: notes" + TNL.getData().getNotes().get(0).getContent());
+                        notelist.notes.addAll(TNL.getData().getNotes());
+                        Log.d(TAG, "GetNotesbyTags: +---------------------------------------1");
+                        notelist.setCount(TNL.getData().getCount());
+                        Log.d(TAG, "GetNotesbyTags: +---------------------------------------2");
+                    }
+                },throwable -> {
+//                    Log.d("GetNotesByKey", "通过tagid查询笔记列表第一页失败" + throwable);
+                });
+        Log.d(TAG, "GetNotesbyTags: notelist" + notelist.getNotes().toString());
+        return notelist;
     }
 
     /**

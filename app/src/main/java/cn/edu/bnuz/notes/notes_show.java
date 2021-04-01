@@ -276,78 +276,9 @@ public class  notes_show extends Activity {
 
                     //编辑后上传
                     onEdit(note);
-//              note.setUserId(888888888);
-//              List<File> images = new ArrayList<>();
-//              String html = mPreview.getText().toString();
-//              Document doc = Jsoup.parseBodyFragment(html);
-//              Element body = doc.body();
-                    //--------------------------------------------------------------------------
-//                    List<String> imagesUrl = new ArrayList<>();
-//                    Elements img = doc.select("img");
-//                    int imgsize = img.size();
-//                    Log.d(TAG, "onClick: imgsize:" + imgsize);
-//
-//                    threadExecutor.execute(new Runnable() {
-//                        @Override
-//                        public void run() {
-//                            Looper.prepare();
-//                            long result = mNoteController.UpdateNote(note);
-//                            Log.d(TAG, "run: 修改笔记结果码：:" + result);
-//                            if (result == 200) {
-//                                //准备待上传的文件list
-//                                for (Element s : img) {
-//                                    if (!(s.attr("src").contains("http:/"))) {
-//                                        Log.d(TAG, "src:" + s.attr("src"));
-//                                        File file = new File(s.attr("src"));
-//                                        String url = mFileTransController.FileUpload(file,note.getNoteId());
-//                                        Log.d(TAG, "run: filesuploadresult:" + url);
-//                                        imagesUrl.add(url);
-//                                    }
-//                                }
-//                                Log.d(TAG, "run: imagesize" + imgsize);
-//                                if (imgsize != 0) {
-//                                    //得到urllist：imagesUrl
-//                                    for (int i = 0;i < imgsize;i++){
-//                                        doc.select("img").get(i).attr("src",imagesUrl.get(i)).attr("alt",imagesUrl.get(i));
-//                                    }
-//                                    //得到替换完成的doc
-//                                    Log.d(TAG, "run: 替换完成的doc" + doc);
-//                                    note.setHtmlContent(doc.body().toString());
-//                                    //修改云端htmlcontent
-//                                    mNoteController.UpdateNoteHtmlContent(note);
-////                          mNoteController.UpdateNote(note);
-//                                }
-//                                Toast.makeText(notes_show.this,"已上传至云端",Toast.LENGTH_LONG).show();
-//                            }
-//                            else if (result == 201){
-//                                Toast.makeText(notes_show.this,"上传失败，已保存在本地",Toast.LENGTH_LONG).show();
-//                            }
-//                            else {
-//                                Toast.makeText(notes_show.this,"保存失败",Toast.LENGTH_LONG).show();
-//                                Log.d(TAG, "run: fail111111111111111111111111111111111111111111111111111");
-//                            }
-//                            Looper.loop();
-//                        }
-//                    });
-
-                    //------------------------------------------------------------------------
-//                    Thread thread = new Thread(new Runnable() {
-//                        @Override
-//                        public void run() {
-//
-//                        }
-//                    });
-//                    thread.start();
-//                    try {
-//                        thread.join();      //等待线程执行完
-//                    } catch (InterruptedException e) {
-//                        e.printStackTrace();
-//                    }
-                    Log.d(TAG, "onClick: finish2222222222222222222222222222222222");
+//                    Log.d(TAG, "onClick: finish2222222222222222222222222222222222");
                     finish();
                 }
-
-//                mEditor.setHtml("11111114<img src=\"/storage/emulated/0/Download/create.png\" alt=\"/storage/emulated/0/Download/create.png\" style=\"max-width:75%\">");
             }
         });
 

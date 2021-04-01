@@ -59,7 +59,7 @@ public class TagControllerImpl extends Binder implements ITagController {
                         notelist.addAll(Tl.getData());
                     }
                 },throwable -> {
-                    Log.d("GetTagsByUser", "查询笔记列表第一页失败" + throwable);
+                    Log.d("GetTagsByUser", "查询笔记列表失败" + throwable);
                 });
         return notelist;
     }

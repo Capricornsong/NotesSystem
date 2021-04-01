@@ -145,7 +145,7 @@ public class MyApplication extends Application {
 
     //TagController
     public static MyApplication.TagConnection mTagConnection;
-    private static ITagController mTagController;
+    public static ITagController mTagController;
     private class TagConnection implements ServiceConnection {
 
         @Override

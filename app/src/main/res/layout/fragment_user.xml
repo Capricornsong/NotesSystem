@@ -46,4 +46,17 @@
                 android:layout_marginTop="30dp"
                 android:background="@color/app_color_blue_3_pressed"
         />
+        <Button
+            android:id="@+id/btn_quit"
+            android:text="退出登录"
+            android:background="@drawable/quit"
+            android:textSize="24sp"
+            android:textColor="@color/qmui_config_color_white"
+            android:layout_gravity="center"
+            android:layout_width="320dp"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/user_notes"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="377dp"
+            />
 </RelativeLayout>

@@ -1,19 +1,21 @@
 package cn.edu.bnuz.notes;
 
 import android.content.ComponentName;
-import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.database.sqlite.SQLiteDatabase;
 import android.graphics.drawable.Drawable;
 import android.os.IBinder;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.*;
-import cn.edu.bnuz.notes.login_register.Login;
+
+import cn.edu.bnuz.notes.ntwpojo.TagListRD;
+import cn.edu.bnuz.notes.ntwpojo.TagsFilter;
 import cn.edu.bnuz.notes.pojo.Note;
 import cn.edu.bnuz.notes.websocket.WebSocketClientService;
 import android.os.Bundle;
@@ -28,48 +30,34 @@ import butterknife.ButterKnife;
 import cn.edu.bnuz.notes.fragment_navigation.NotesFragment;
 import cn.edu.bnuz.notes.fragment_navigation.TreeFragment;
 import cn.edu.bnuz.notes.fragment_navigation.UserFragment;
-import cn.edu.bnuz.notes.interfaces.IFileController;
-import cn.edu.bnuz.notes.interfaces.IFileTrans;
-import cn.edu.bnuz.notes.interfaces.INoteController;
-import cn.edu.bnuz.notes.interfaces.IShareController;
-import cn.edu.bnuz.notes.interfaces.ITagController;
-import cn.edu.bnuz.notes.interfaces.ITokenController;
-import rxhttp.RxHttpPlugins;
-import rxhttp.wrapper.cahce.CacheMode;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.qmuiteam.qmui.skin.QMUISkinManager;
 import com.qmuiteam.qmui.util.QMUIStatusBarHelper;
 import com.qmuiteam.qmui.widget.QMUITopBar;
 import com.qmuiteam.qmui.widget.dialog.QMUIDialog;
 import com.qmuiteam.qmui.widget.dialog.QMUIDialogAction;
-import com.scwang.smart.refresh.layout.listener.OnRefreshListener;
 
-import cn.edu.bnuz.notes.login_register.Login;
-import cn.edu.bnuz.notes.websocket.WebSocketClientService;
-
+import static cn.edu.bnuz.notes.MyApplication.mNoteController;
 import static cn.edu.bnuz.notes.MyApplication.mShareController;
+import static cn.edu.bnuz.notes.MyApplication.mTagController;
 import static cn.edu.bnuz.notes.MyApplication.myWebSocketClient;
 import static cn.edu.bnuz.notes.MyApplication.threadExecutor;
 import static cn.edu.bnuz.notes.constants.destPath;
 
 import org.java_websocket.client.WebSocketClient;
-import org.java_websocket.client.WebSocketClient;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.litepal.LitePal;
 
-import java.io.File;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
-import static cn.edu.bnuz.notes.MyApplication.mFileConnection;
-import static cn.edu.bnuz.notes.MyApplication.mFileTransConnection;
 import static cn.edu.bnuz.notes.MyApplication.mMyReceiver;
-import static cn.edu.bnuz.notes.MyApplication.mNoteConnection;
-import static cn.edu.bnuz.notes.MyApplication.mShareConnection;
-import static cn.edu.bnuz.notes.MyApplication.mTagConnection;
-import static cn.edu.bnuz.notes.MyApplication.mTokenConnection;
+import static cn.edu.bnuz.notes.pojo.Token.token;
+import static cn.edu.bnuz.notes.pojo.Token.UserInf;
 import static cn.edu.bnuz.notes.utils.util.NetCheck;
 import static org.litepal.LitePalApplication.getContext;
 
@@ -97,11 +85,32 @@ public class MainActivity extends FragmentActivity {
         //配置本地文件缓存路径
         destPath = this.getExternalCacheDir().getPath() + "/";
         initView();
+        gainUserId();
         setContentView(root);
         //绑定webSocker服务
 //        bindService();
 
     }
+
+    private void gainUserId() {
+//        Log.d(TAG, "gainUserId: token");
+        Claims claims = null;
+        try {
+            claims = Jwts.parser()
+                        .setSigningKey(("uaaNotes").getBytes("UTF-8"))
+                    .parseClaimsJws(token.substring(7))
+                    .getBody();
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+
+        //获取用户名
+        String userinf = (String) claims.get("user_name");
+        Gson gson = new Gson();
+        UserInf = gson.fromJson(userinf,JsonObject.class);
+        Log.d(TAG, "gainUserId: username" + UserInf.get("userId").toString());
+    }
+
     //底部导航栏和相关函数
     private void initView() {
         mTopBar.setTitle("笔记");
@@ -130,6 +139,10 @@ public class MainActivity extends FragmentActivity {
         mViewPager.setAdapter(mAdapter);
         mViewPager.addOnPageChangeListener(mPageChangeListener);
         mTabRadioGroup.setOnCheckedChangeListener(mOnCheckedChangeListener);
+
+        if (NetCheck()) {
+            mTopBar.removeAllRightViews();
+        }
         mTopBar.addLeftImageButton(R.mipmap.share,R.layout.notes_edit_ui).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -159,6 +172,7 @@ public class MainActivity extends FragmentActivity {
                                         threadExecutor.execute(new Runnable() {
                                             @Override
                                             public void run() {
+
                                                 note = mShareController.GetShare(Long.parseLong(text.toString()));
                                                 countDownLatch.countDown();
                                             }
@@ -198,25 +212,87 @@ public class MainActivity extends FragmentActivity {
         mTopBar.addRightImageButton(R.mipmap.tree_tag,R.layout.activity_main).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                new QMUIDialog.MessageDialogBuilder(MainActivity.this)
-                        .setTitle("Tag选择")
-                        .setMessage("这是Tag选择按钮")
-                        .addAction("取消", new QMUIDialogAction.ActionListener() {
-                            @Override
-                            public void onClick(QMUIDialog dialog, int index) {
-                                dialog.dismiss();
-                                Toast.makeText(MainActivity.this, "取消", Toast.LENGTH_SHORT).show();
+                //创建一个CountDownLatch类，构造入参线程数
+                CountDownLatch countDownLatch1 = new CountDownLatch(1);
+                List<TagListRD.DataBean> tags = new ArrayList<TagListRD.DataBean>();
+                threadExecutor.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        tags.addAll(mTagController.GetTagsByUser());
+                        countDownLatch1.countDown();
+                    }
+                });
+                //等待上方线程执行完
+                try {
+                    countDownLatch1.await();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                String[] items = new String[tags.size()];
+                for(int i = 0; i < tags.size(); i++){
+                    items[i] = tags.get(i).getTagName();
+                }
+                tags.addAll(mTagController.GetTagsByUser());
 
-                            }
-                        })
-                        .addAction("确定", new QMUIDialogAction.ActionListener() {
+                final QMUIDialog.MultiCheckableDialogBuilder builder = new QMUIDialog.MultiCheckableDialogBuilder(MainActivity.this)
+                        .addItems(items, new DialogInterface.OnClickListener() {
                             @Override
-                            public void onClick(QMUIDialog dialog, int index) {
-                                dialog.dismiss();
-                                Toast.makeText(MainActivity.this, "确定", Toast.LENGTH_SHORT).show();
+                            public void onClick(DialogInterface dialog, int which) {
                             }
-                        })
-                        .show();
+                        });
+                builder.addAction("取消", new QMUIDialogAction.ActionListener() {
+                    @Override
+                    public void onClick(QMUIDialog dialog, int index) {
+                        dialog.dismiss();
+                    }
+                });
+                builder.addAction("确定", new QMUIDialogAction.ActionListener() {
+                    @Override
+                    public void onClick(QMUIDialog dialog, int index) {
+                        CountDownLatch countDownLatch2 = new CountDownLatch(1);
+                        List<TagsFilter.DataBean.NotesBean> notesBeanList = new ArrayList<>();
+                        if (builder.getCheckedItemIndexes().length != 0) {
+                            ArrayList<String> selectedTags = new ArrayList<>();
+                            for(int i = 0;i < builder.getCheckedItemIndexes().length;i++){
+                                selectedTags.add(tags.get(builder.getCheckedItemIndexes()[i]).getTagName());
+                            }
+                            Log.d(TAG, "onClick: tags" + selectedTags.toString());
+                            threadExecutor.execute(new Runnable() {
+                                @Override
+                                public void run() {
+                                    TagsFilter.DataBean dataBean = mNoteController.GetNotesbyTags(selectedTags,1,50);
+                                    Log.d(TAG, "run: datesize" + dataBean.getNotes().size());
+                                    notesBeanList.addAll(dataBean.getNotes());
+                                    countDownLatch2.countDown();
+                                }
+                            });
+                            //等待上方线程执行完
+                            try {
+                                countDownLatch2.await();
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            Log.d(TAG, "onClick: noteBeanList" + notesBeanList.toString());
+                            NotesFragment notesFragment=new NotesFragment();
+                            Bundle bundle=new Bundle();
+                            bundle.putParcelableArrayList("notelist", (ArrayList<? extends Parcelable>) notesBeanList);
+//                            bundle.putString("noteList",);
+                            notesFragment.setArguments(bundle);
+                            dialog.dismiss();
+                        }
+                        else {
+                            Toast.makeText(MainActivity.this, "请选择", Toast.LENGTH_SHORT).show();
+                        }
+
+//                        String result = "你选择了 ";
+//                        for (int i = 0; i < builder.getCheckedItemIndexes().length; i++) {
+//                            result += "" + ++builder.getCheckedItemIndexes()[i] + "; ";
+//                        }
+//                        Toast.makeText(MainActivity.this, result, Toast.LENGTH_SHORT).show();
+
+                    }
+                });
+                builder.show();
             }
         });
     }
@@ -381,27 +457,87 @@ public class MainActivity extends FragmentActivity {
                         mTopBar.addRightImageButton(R.mipmap.tree_tag,R.layout.activity_main).setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                new QMUIDialog.MessageDialogBuilder(MainActivity.this)
-                                        .setTitle("Tag选择")
-                                        .setMessage("这是Tag选择按钮")
-                                        .addAction("取消", new QMUIDialogAction.ActionListener() {
-                                            @Override
-                                            public void onClick(QMUIDialog dialog, int index) {
-                                                dialog.dismiss();
-                                                Toast.makeText(MainActivity.this, "取消", Toast.LENGTH_SHORT).show();
+                                //创建一个CountDownLatch类，构造入参线程数
+                                CountDownLatch countDownLatch1 = new CountDownLatch(1);
+                                List<TagListRD.DataBean> tags = new ArrayList<TagListRD.DataBean>();
+                                threadExecutor.execute(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        tags.addAll(mTagController.GetTagsByUser());
+                                        countDownLatch1.countDown();
+                                    }
+                                });
+                                //等待上方线程执行完
+                                try {
+                                    countDownLatch1.await();
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+                                String[] items = new String[tags.size()];
+                                for(int i = 0; i < tags.size(); i++){
+                                    items[i] = tags.get(i).getTagName();
+                                }
+                                tags.addAll(mTagController.GetTagsByUser());
 
-                                            }
-                                        })
-                                        .addAction("确定", new QMUIDialogAction.ActionListener() {
+                                final QMUIDialog.MultiCheckableDialogBuilder builder = new QMUIDialog.MultiCheckableDialogBuilder(MainActivity.this)
+                                        .addItems(items, new DialogInterface.OnClickListener() {
                                             @Override
-                                            public void onClick(QMUIDialog dialog, int index) {
-                                                dialog.dismiss();
-                                                Toast.makeText(MainActivity.this, "确定", Toast.LENGTH_SHORT).show();
+                                            public void onClick(DialogInterface dialog, int which) {
                                             }
-                                        })
-                                        .show();
+                                        });
+                                builder.addAction("取消", new QMUIDialogAction.ActionListener() {
+                                    @Override
+                                    public void onClick(QMUIDialog dialog, int index) {
+                                        dialog.dismiss();
+                                    }
+                                });
+                                builder.addAction("确定", new QMUIDialogAction.ActionListener() {
+                                    @Override
+                                    public void onClick(QMUIDialog dialog, int index) {
+                                        CountDownLatch countDownLatch2 = new CountDownLatch(1);
+                                        List<TagsFilter.DataBean.NotesBean> notesBeanList = new ArrayList<>();
+                                        if (builder.getCheckedItemIndexes().length != 0) {
+                                            ArrayList<String> selectedTags = new ArrayList<>();
+                                            for(int i = 0;i < builder.getCheckedItemIndexes().length;i++){
+                                                selectedTags.add(tags.get(builder.getCheckedItemIndexes()[i]).getTagName());
+                                            }
+                                            Log.d(TAG, "onClick: tags" + selectedTags.toString());
+                                            threadExecutor.execute(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    TagsFilter.DataBean dataBean = mNoteController.GetNotesbyTags(selectedTags,1,50);
+                                                    Log.d(TAG, "run: datesize" + dataBean.getNotes().size());
+                                                    notesBeanList.addAll(dataBean.getNotes());
+                                                    countDownLatch2.countDown();
+                                                }
+                                            });
+                                            //等待上方线程执行完
+                                            try {
+                                                countDownLatch2.await();
+                                            } catch (InterruptedException e) {
+                                                e.printStackTrace();
+                                            }
+                                            Log.d(TAG, "onClick: noteBeanList" + notesBeanList.toString());
+                                            dialog.dismiss();
+                                        }
+                                        else {
+                                            Toast.makeText(MainActivity.this, "请选择", Toast.LENGTH_SHORT).show();
+                                        }
+
+//                        String result = "你选择了 ";
+//                        for (int i = 0; i < builder.getCheckedItemIndexes().length; i++) {
+//                            result += "" + ++builder.getCheckedItemIndexes()[i] + "; ";
+//                        }
+//                        Toast.makeText(MainActivity.this, result, Toast.LENGTH_SHORT).show();
+
+                                    }
+                                });
+                                builder.show();
                             }
                         });
+                        if (NetCheck()) {
+                            mTopBar.removeAllRightViews();
+                        }
                     }
                     if(i==1) {
                         mTopBar.removeAllRightViews();
@@ -425,6 +561,7 @@ public class MainActivity extends FragmentActivity {
                                         .addAction("确定", new QMUIDialogAction.ActionListener() {
                                             @Override
                                             public void onClick(QMUIDialog dialog, int index) {
+
                                                 dialog.dismiss();
                                                 Toast.makeText(MainActivity.this, "确定", Toast.LENGTH_SHORT).show();
                                             }

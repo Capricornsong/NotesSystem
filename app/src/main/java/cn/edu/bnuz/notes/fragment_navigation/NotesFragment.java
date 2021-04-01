@@ -43,6 +43,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import cn.edu.bnuz.notes.notes_show;
 import cn.edu.bnuz.notes.ntwpojo.NotesbyPageorTagIdRD;
+import cn.edu.bnuz.notes.ntwpojo.TagsFilter;
 import cn.edu.bnuz.notes.pojo.Note;
 import cn.edu.bnuz.notes.notes_show;
 import cn.edu.bnuz.notes.ntwpojo.GetFilesbyNoteId;
@@ -56,6 +57,7 @@ import static cn.edu.bnuz.notes.MyApplication.mNoteController;
 import static cn.edu.bnuz.notes.MyApplication.mShareController;
 import static cn.edu.bnuz.notes.MyApplication.threadExecutor;
 import static cn.edu.bnuz.notes.constants.destPath;
+import static cn.edu.bnuz.notes.pojo.Token.UserInf;
 import static cn.edu.bnuz.notes.utils.util.NetCheck;
 import static cn.edu.bnuz.notes.MyApplication.mNoteController;
 import static cn.edu.bnuz.notes.MyApplication.threadExecutor;
@@ -83,7 +85,8 @@ public class NotesFragment extends Fragment {
     private List<String> mFilespPath = new ArrayList<>();
     private Note mNote;
     private List<GetFilesbyNoteId.DataBean> mFileList = new ArrayList<>();
-    private final List<Note> mNotelist = LitePal.where("isDelete == ?  and userid == ?","0",).find(Note.class);       //用于存储从本地获取的笔记
+    private List<TagsFilter.DataBean.NotesBean> filterList = new ArrayList<>();
+    private final List<Note> mNotelist = LitePal.where("isDelete == ? userId = ?","0",UserInf.get("Userid").toString()).find(Note.class);       //用于存储从本地获取的笔记
     public NotesFragment() {
         // Required empty public constructor
     }
@@ -110,6 +113,12 @@ public class NotesFragment extends Fragment {
         super.onCreate(savedInstanceState);
         View rootView = inflater.inflate(R.layout.fragment_notes,null);
         unbinder = ButterKnife.bind(this, rootView);
+        Bundle bundle = getArguments();
+        if(bundle.getParcelableArrayList("notelist") != null)
+        {
+            filterList.addAll(bundle.getParcelableArrayList("notelist"));
+//            Lnotes.addAll(filterList);
+        }
         initView();
         //设置 Header 为 Material风格
         refreshLayout.setRefreshHeader(new MaterialHeader(getContext()).setShowBezierWave(true));
@@ -138,33 +147,42 @@ public class NotesFragment extends Fragment {
         List<NotesbyPageorTagIdRD.NotesPkg.Notes> Lnotes=new ArrayList<>();
         mFilespPath.clear();
         mNote = new Note();
-        //判断是否有网络
-        if (NetCheck()) {
-            Toast.makeText(getContext(), "正在从云端获取笔记", Toast.LENGTH_SHORT).show();
-            Thread thread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    //过去笔记列表
-                    NotesbyPageorTagIdRD.NotesPkg notesPkg = mNoteController.GetNotesbyPage();
-                    Log.d(TAG, "run: ///////////////////");
-                    Lnotes.addAll(notesPkg.getNotes());
-                }
-            });
 
-            thread.start();
-            try {
-                thread.join();      //待线程运行完再往下执行
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+        if(filterList.size() != 0)
+        {
+//            Lnotes.addAll(filterList);
+        }
+        else {
+            //判断是否有网络
+            if (NetCheck()) {
+                Toast.makeText(getContext(), "正在从云端获取笔记", Toast.LENGTH_SHORT).show();
+                Thread thread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        //过去笔记列表
+                        NotesbyPageorTagIdRD.NotesPkg notesPkg = mNoteController.GetNotesbyPage();
+                        Log.d(TAG, "run: ///////////////////");
+                        Lnotes.addAll(notesPkg.getNotes());
+                    }
+                });
+
+                thread.start();
+                try {
+                    thread.join();      //待线程运行完再往下执行
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            else{
+                Toast.makeText(getContext(), "无网络，已显示本地笔记", Toast.LENGTH_SHORT).show();
+                for (Note note : mNotelist){
+                    NotesbyPageorTagIdRD.NotesPkg.Notes newnote = new NotesbyPageorTagIdRD.NotesPkg.Notes(note.getTitle(),note.getContent(),note.getGmt_modified(),note.getNoteId());
+                    Lnotes.add(newnote);
+                }
             }
         }
-        else{
-            Toast.makeText(getContext(), "无网络，已显示本地笔记", Toast.LENGTH_SHORT).show();
-            for (Note note : mNotelist){
-                NotesbyPageorTagIdRD.NotesPkg.Notes newnote = new NotesbyPageorTagIdRD.NotesPkg.Notes(note.getTitle(),note.getContent(),note.getGmt_modified(),note.getNoteId());
-                Lnotes.add(newnote);
-            }
-        }
+
+
 
         Log.d(TAG, "initView: -*----------------------");
         mNotesAdapter = new NotesAdapter(getContext(),R.layout.simple_list_item,Lnotes);
@@ -221,7 +239,6 @@ public class NotesFragment extends Fragment {
                 }
                 //无网络时
                 else{
-
                     bundle.putString("title",mNotelist.get(i).getTitle());
                     bundle.putString("htmlcontent",mNotelist.get(i).getHtmlContent());
                     intent.putExtras(bundle);

@@ -2,6 +2,7 @@ package cn.edu.bnuz.notes.interfaces;
 
 import cn.edu.bnuz.notes.ntwpojo.NoteSearchRD;
 import cn.edu.bnuz.notes.ntwpojo.NotesbyPageorTagIdRD;
+import cn.edu.bnuz.notes.ntwpojo.TagsFilter;
 import cn.edu.bnuz.notes.pojo.Note;
 
 import java.util.List;
@@ -152,7 +153,7 @@ public interface INoteController {
      * @return
      *
      */
-    List<NotesbyPageorTagIdRD.NotesPkg> GetNotesbyTags(List<String> tags, int pageNo, int pageSize);
+    TagsFilter.DataBean GetNotesbyTags(List<String> tags, int pageNo, int pageSize);
 
 
     /**
