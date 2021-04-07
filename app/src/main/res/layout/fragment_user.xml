@@ -9,7 +9,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="150dp"
                 android:id="@+id/user"
-
+                android:background="@color/app_color_blue_3_pressed"
                 >
         <ImageView
                 android:id="@+id/user_img"
@@ -18,20 +18,24 @@
                 android:src="@mipmap/users_img"
                 android:layout_centerVertical="true"
                 />
-         <TextView android:layout_width="wrap_content"
-                   android:layout_height="wrap_content"
-                   android:text="用户名"
-                   android:layout_toRightOf="@id/user_img"
-                   android:layout_centerVertical="true"
-                   android:layout_marginLeft="25dp"
+         <TextView
+             android:id="@+id/user_name"
+             android:layout_width="wrap_content"
+             android:layout_height="wrap_content"
+             android:text="用户名"
+             android:layout_toRightOf="@id/user_img"
+             android:layout_centerVertical="true"
+             android:layout_marginLeft="25dp"
+             android:textSize="25dp"
          />
             <ImageButton
-                    android:id="@+id/user_come"
-                    android:layout_height="wrap_content"
-                    android:layout_width="wrap_content"
-                    android:src="@mipmap/users_come"
-                    android:layout_centerVertical="true"
-                    android:layout_alignParentRight="true"
+            android:id="@+id/user_come"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:src="@mipmap/users_come"
+            android:layout_centerVertical="true"
+            android:layout_alignParentRight="true"
+            android:layout_marginRight="25dp"
             />
         </RelativeLayout>
         <com.qmuiteam.qmui.widget.grouplist.QMUICommonListItemView
@@ -51,12 +55,12 @@
             android:text="退出登录"
             android:background="@drawable/quit"
             android:textSize="24sp"
-            android:textColor="@color/qmui_config_color_white"
+            android:textColor="@color/qmui_config_color_red"
             android:layout_gravity="center"
             android:layout_width="320dp"
             android:layout_height="wrap_content"
             android:layout_below="@+id/user_notes"
             android:layout_centerHorizontal="true"
-            android:layout_marginTop="377dp"
+            android:layout_marginTop="200dp"
             />
 </RelativeLayout>

@@ -7,6 +7,7 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.os.Build;
+import android.os.Handler;
 import android.os.Looper;
 import android.text.InputType;
 import android.util.Log;
@@ -129,6 +130,7 @@ public class Notes_Edit extends Activity {
     @BindView(R.id.create_notes)
     FloatingActionButton create_note;
     private String TAG = "Notes_Edit";
+    private Handler mHandler = new Handler();
     int button_type=0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -252,7 +254,6 @@ public class Notes_Edit extends Activity {
 
             @Override
             public void onClick(View v) {
-                mEditor.focusEditor();
                 mEditor.setBold();
             }
         });
@@ -261,7 +262,6 @@ public class Notes_Edit extends Activity {
 
             @Override
             public void onClick(View v) {
-                mEditor.focusEditor();
                 mEditor.setItalic();
             }
         });
@@ -269,7 +269,6 @@ public class Notes_Edit extends Activity {
         subscript.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mEditor.focusEditor();
                 if (mEditor.getHtml() == null) {
                     return;
                 }
@@ -280,7 +279,6 @@ public class Notes_Edit extends Activity {
         superscript.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mEditor.focusEditor();
                 if (mEditor.getHtml() == null) {
                     return;
                 }
@@ -291,7 +289,6 @@ public class Notes_Edit extends Activity {
         strikethrough.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mEditor.focusEditor();
                 mEditor.setStrikeThrough();
             }
         });
@@ -299,7 +296,6 @@ public class Notes_Edit extends Activity {
         underline.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mEditor.focusEditor();
                 mEditor.setUnderline();
             }
         });
@@ -349,7 +345,6 @@ public class Notes_Edit extends Activity {
         txt_color.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mEditor.focusEditor();
                 new MaterialDialog.Builder(Notes_Edit.this)
                         .title("选择字体颜色")
                         .items(R.array.color_items)
@@ -383,7 +378,6 @@ public class Notes_Edit extends Activity {
         bg_color.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mEditor.focusEditor();
                 new MaterialDialog.Builder(Notes_Edit.this)
                         .title("选择字体背景颜色")
                         .items(R.array.text_back_color_items)
@@ -421,7 +415,6 @@ public class Notes_Edit extends Activity {
         indent.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mEditor.focusEditor();
                 mEditor.setIndent();
             }
         });
@@ -429,7 +422,6 @@ public class Notes_Edit extends Activity {
         outdent.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mEditor.focusEditor();
                 mEditor.setOutdent();
             }
         });
@@ -437,7 +429,6 @@ public class Notes_Edit extends Activity {
         align_left.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mEditor.focusEditor();
                 mEditor.setAlignLeft();
             }
         });
@@ -480,7 +471,6 @@ public class Notes_Edit extends Activity {
         insert_image.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mEditor.focusEditor();
                 ActivityCompat.requestPermissions(Notes_Edit.this, mPermissionList, 100);
                 button_type=1;
             }
@@ -515,7 +505,6 @@ public class Notes_Edit extends Activity {
                             @Override
                             public boolean onSelection(MaterialDialog dialog, View itemView, int which, CharSequence text) {
                                 dialog.dismiss();
-                                mEditor.focusEditor();
                                 mEditor.insertLink("http://blog.csdn.net/huangxiaoguo1",
                                         "http://blog.csdn.net/huangxiaoguo1");
                                 return false;
@@ -527,7 +516,6 @@ public class Notes_Edit extends Activity {
         insert_checkbox.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mEditor.focusEditor();
                 mEditor.insertTodo();
             }
         });
@@ -570,10 +558,11 @@ public class Notes_Edit extends Activity {
         Log.d(TAG, "uploadNewNote: imgsize" + imgsize);
         Log.d(TAG, "uploadNewNote: videosize" + videosize);
 
+
         threadExecutor.execute(new Runnable() {
             @Override
             public void run() {
-                Looper.prepare();
+//                Looper.prepare();
 
                 long result = mNoteController.CreateNote(note);
                 Log.d(TAG, "run: 新建笔记结果码：:" + result);
@@ -586,9 +575,15 @@ public class Notes_Edit extends Activity {
                             Log.d(TAG, "src:" + s.attr("src"));
                             File file = new File(s.attr("src"));
                             String url = mFileTransController.FileUpload(file,result);
+                            try {
+                                Thread.sleep(1000);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
                             Log.d(TAG, "run: filesuploadresult:" + url);
                             imagesUrl.add(url);
                         }
+                        Log.d(TAG, "run: imagesUrl.size" + imagesUrl.size());
                         //得到urllist：imagesUrl，开始上传
                         for (int i = 0;i < imagesUrl.size();i++){
                             doc.select("img").get(i).attr("src",imagesUrl.get(i)).attr("alt",imagesUrl.get(i));
@@ -617,17 +612,37 @@ public class Notes_Edit extends Activity {
                         mNoteController.UpdateNoteHtmlContent(note);
                     }
 //                                          mNoteController.UpdateNote(note);
-                    Toast.makeText(Notes_Edit.this,"已上传至云端",Toast.LENGTH_LONG).show();
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(Notes_Edit.this,"已上传至云端",Toast.LENGTH_LONG).show();
+                        }
+                    });
+
                 }
                 else if (result == 201){
                     //无网络时。具体笔记存储逻辑在CreateNote()方法中
-                    Toast.makeText(Notes_Edit.this,"上传失败，已保存在本地",Toast.LENGTH_LONG).show();
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(Notes_Edit.this,"上传失败，已保存在本地",Toast.LENGTH_LONG).show();
+                        }
+                    });
+
                 }
                 else {
-                    Toast.makeText(Notes_Edit.this,"保存失败",Toast.LENGTH_LONG).show();
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(Notes_Edit.this,"保存失败",Toast.LENGTH_LONG).show();
+                        }
+                    });
+
                 }
 
-                Looper.loop();
+
+
+//                Looper.loop();
             }
         });
     }

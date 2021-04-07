@@ -9,6 +9,7 @@ import cn.edu.bnuz.notes.pojo.Token;
 import android.content.Context;
 import java.io.File;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import static cn.edu.bnuz.notes.constants.destPath;
@@ -96,6 +97,7 @@ public class FileTransImpl extends Binder implements IFileTrans {
         RxHttp.postForm("http://120.76.128.222:8004/file/" + noteid)
                 .addFile("file", file)
                 .setSync()
+//                .subscribeOnCurrent()
                 .upload(progress -> {
                     //上传进度回调,0-100，仅在进度有更新时才会回调,最多回调101次，最后一次回调Http执行结果
                     int currentProgress = progress.getProgress(); //当前进度 0-100
@@ -106,22 +108,24 @@ public class FileTransImpl extends Binder implements IFileTrans {
                     Log.d(TAG, "FileUpload: totalSize"  +totalSize);
                 })
                 .asClass(PostFile.class)
+//                .timeout(20, TimeUnit.SECONDS)
                 .subscribe(s -> {
+                    Log.d(TAG, "FileUpload: mesg" + s.getMsg());
+                    //上传成功
                     if (s.getCode() == 200){
                         Log.d(TAG, "FileUpload: uploaddone..");
                         result.set(s.getData().getFileUrl());
-//                        fileid.set(s.getData().getFileId());
+                        Log.d(TAG, "FileUpload: result" + result.get());
                     }
-                    else
+                    else{
+                        Log.d(TAG, "FileUpload: uploadfail..");
                         result.set(String.valueOf(s.getCode()));
-//                        fileid.set((s.getCode()));
+                    }
 
-                    //上传成功
                 }, throwable -> {
                     //上传失败
                 });
         return result.get();
-
     }
 
     /**

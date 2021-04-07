@@ -8,26 +8,19 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.Toast;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
+
 import org.litepal.LitePal;
 
-import java.io.File;
 import androidx.fragment.app.Fragment;
 
 import com.qmuiteam.qmui.widget.dialog.QMUIDialog;
 import com.qmuiteam.qmui.widget.dialog.QMUIDialogAction;
-import com.scwang.smart.refresh.footer.ClassicsFooter;
 import com.scwang.smart.refresh.header.ClassicsHeader;
 import com.scwang.smart.refresh.header.MaterialHeader;
 import com.scwang.smart.refresh.layout.api.RefreshLayout;
-import com.scwang.smart.refresh.layout.listener.OnLoadMoreListener;
 import com.scwang.smart.refresh.layout.listener.OnRefreshListener;
 
 import java.util.ArrayList;
@@ -35,32 +28,19 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 import butterknife.*;
-import cn.edu.bnuz.notes.MainActivity;
-import cn.edu.bnuz.notes.impl.NoteControllerImpl;
 import cn.edu.bnuz.notes.note_edit.Notes_Edit;
 import cn.edu.bnuz.notes.R;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import cn.edu.bnuz.notes.notes_show;
 import cn.edu.bnuz.notes.ntwpojo.NotesbyPageorTagIdRD;
-import cn.edu.bnuz.notes.ntwpojo.TagsFilter;
 import cn.edu.bnuz.notes.pojo.Note;
-import cn.edu.bnuz.notes.notes_show;
 import cn.edu.bnuz.notes.ntwpojo.GetFilesbyNoteId;
-import cn.edu.bnuz.notes.ntwpojo.NotesbyPageorTagIdRD;
-import cn.edu.bnuz.notes.pojo.Note;
-import cn.edu.bnuz.notes.utils.util;
 
-import static cn.edu.bnuz.notes.MyApplication.mFileController;
-import static cn.edu.bnuz.notes.MyApplication.mFileTransController;
 import static cn.edu.bnuz.notes.MyApplication.mNoteController;
-import static cn.edu.bnuz.notes.MyApplication.mShareController;
 import static cn.edu.bnuz.notes.MyApplication.threadExecutor;
-import static cn.edu.bnuz.notes.constants.destPath;
 import static cn.edu.bnuz.notes.pojo.Token.UserInf;
 import static cn.edu.bnuz.notes.utils.util.NetCheck;
-import static cn.edu.bnuz.notes.MyApplication.mNoteController;
-import static cn.edu.bnuz.notes.MyApplication.threadExecutor;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -85,8 +65,8 @@ public class NotesFragment extends Fragment {
     private List<String> mFilespPath = new ArrayList<>();
     private Note mNote;
     private List<GetFilesbyNoteId.DataBean> mFileList = new ArrayList<>();
-    private List<TagsFilter.DataBean.NotesBean> filterList = new ArrayList<>();
-    private final List<Note> mNotelist = LitePal.where("isDelete == ? userId = ?","0",UserInf.get("Userid").toString()).find(Note.class);       //用于存储从本地获取的笔记
+    private List<NotesbyPageorTagIdRD.NotesPkg.Notes> filterList = new ArrayList<>();
+    private List<Note> mNotelist = new ArrayList<>();       //用于存储从本地获取的笔记
     public NotesFragment() {
         // Required empty public constructor
     }
@@ -146,11 +126,12 @@ public class NotesFragment extends Fragment {
     private void initView() {
         List<NotesbyPageorTagIdRD.NotesPkg.Notes> Lnotes=new ArrayList<>();
         mFilespPath.clear();
+        mNotelist.addAll(LitePal.where("isDelete == ? and userId = ?","0",UserInf.get("userId").toString()).find(Note.class));
         mNote = new Note();
 
         if(filterList.size() != 0)
         {
-//            Lnotes.addAll(filterList);
+            Lnotes.addAll(filterList);
         }
         else {
             //判断是否有网络
@@ -176,7 +157,7 @@ public class NotesFragment extends Fragment {
             else{
                 Toast.makeText(getContext(), "无网络，已显示本地笔记", Toast.LENGTH_SHORT).show();
                 for (Note note : mNotelist){
-                    NotesbyPageorTagIdRD.NotesPkg.Notes newnote = new NotesbyPageorTagIdRD.NotesPkg.Notes(note.getTitle(),note.getContent(),note.getGmt_modified(),note.getNoteId());
+                    NotesbyPageorTagIdRD.NotesPkg.Notes newnote = new NotesbyPageorTagIdRD.NotesPkg.Notes(note.getTitle(),note.getContent(),note.getGmtModified(),note.getNoteId());
                     Lnotes.add(newnote);
                 }
             }
@@ -228,7 +209,7 @@ public class NotesFragment extends Fragment {
                     bundle.putString("title",mNote.getTitle());
                     bundle.putString("htmlcontent",mNote.getHtmlContent());
                     bundle.putString("content",mNote.getContent());
-                    bundle.putString("gmt_modified",mNote.getGmt_modified());
+                    bundle.putString("gmt_modified",mNote.getGmtModified());
                     bundle.putLong("noteid",mNote.getNoteId());
                     bundle.putLong("userid",mNote.getUserId());
                     bundle.putInt("version",mNote.getVersion());

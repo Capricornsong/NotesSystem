@@ -12,7 +12,6 @@ import cn.edu.bnuz.notes.ntwpojo.DeleteNoteTagShareEmailCheckUsernameCheckRD;
 import cn.edu.bnuz.notes.ntwpojo.NetNoteRD;
 import cn.edu.bnuz.notes.ntwpojo.NoteSearchRD;
 import cn.edu.bnuz.notes.ntwpojo.NotesbyPageorTagIdRD;
-import cn.edu.bnuz.notes.ntwpojo.TagsFilter;
 import cn.edu.bnuz.notes.pojo.Note;
 import cn.edu.bnuz.notes.pojo.Token;
 import static cn.edu.bnuz.notes.MyApplication.myWebSocketClient;
@@ -90,7 +89,7 @@ public class NoteControllerImpl extends Binder implements INoteController{
                         if (c.getCode() == 200){
                             responseCode.set(c.getObject().getNoteId());
 //                            newnote.setGmt_create(c.getObject().getGmtModified());
-                            newnote.setGmt_modified(c.getObject().getGmtModified());
+                            newnote.setGmtModified(c.getObject().getGmtModified());
                             newnote.setNoteId(c.getObject().getNoteId());
                             //设置标识符为1，即已同步到网络
                             newnote.setIsSyn(1);
@@ -175,7 +174,7 @@ public class NoteControllerImpl extends Binder implements INoteController{
                         if (c.getCode() == 200){
                             updateNews.setIsSyn(1);
                             updateNews.setVersion(c.getObject().getVersion());
-                            updateNews.setGmt_modified(c.getObject().getGmtModified());
+                            updateNews.setGmtModified(c.getObject().getGmtModified());
 
                             if (noteList.size() == 0) {
                                 //用上传成功的返回值更新本地的笔记
@@ -481,14 +480,14 @@ public class NoteControllerImpl extends Binder implements INoteController{
      */
     @SuppressLint("CheckResult")
     @Override
-    public TagsFilter.DataBean GetNotesbyTags(List<String> tags, int pageNo, int pageSize) {
+    public NotesbyPageorTagIdRD.NotesPkg GetNotesbyTags(List<String> tags, int pageNo, int pageSize) {
 
-        TagsFilter.DataBean notelist = new TagsFilter.DataBean();
+        NotesbyPageorTagIdRD.NotesPkg notelist = new NotesbyPageorTagIdRD.NotesPkg();
         notelist.notes = new ArrayList<>();
         RxHttp.postJson("/note/tags/" + pageNo + "/" + pageSize)
                 .setSync()
                 .add("tags",tags)
-                .asClass(TagsFilter.class)
+                .asClass(NotesbyPageorTagIdRD.class)
                 .subscribe(TNL -> {
 //                    Log.d(TAG, "GetNotesbyTags: " + TNL);
                     Log.d(TAG, "GetNotesByKey: " + TNL.getCode());

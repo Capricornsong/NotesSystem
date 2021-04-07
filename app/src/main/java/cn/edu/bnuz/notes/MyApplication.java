@@ -39,11 +39,9 @@ public class MyApplication extends Application {
     private Boolean mIsbind;
     private IntentFilter mIntentFilter;
     public static MyReceiver mMyReceiver;
-
-    //绑定相关(test，进入app绑定所有操作)
-    //NoteController
-
+    //database
     private SQLiteDatabase mNoteDB;
+
 
     //初始化线程池
     public static final ThreadPoolExecutor threadExecutor = new ThreadPoolExecutor( 3, 4,  30,
@@ -62,7 +60,6 @@ public class MyApplication extends Application {
 
         //Litepal相关
         LitePal.initialize(this);
-//        Log.d(TAG, "onCreate: litepal初始化-------------------------------");
         //初始化接收器（网络监测）
         initReceiver();
         //绑定服务
@@ -216,6 +213,7 @@ public class MyApplication extends Application {
     };
 
 
+    //LitePal初始化
     private void initDatabese() {
         mNoteDB = LitePal.getDatabase();
     }
@@ -295,7 +293,7 @@ public class MyApplication extends Application {
         RxHttpPlugins.setCache(cacheDir,10 * 1024 * 1024);
 //        RxHttpPlugins.setCache(cacheDir, 10 * 1024 * 1024, CacheMode.REQUEST_NETWORK_FAILED_READ_CACHE, 60 * 1000);
     }
-
+    //初始化广播
     public void initReceiver(){
         mIntentFilter  = new IntentFilter();
         mIntentFilter.addAction("android.net.conn.CONNECTIVITY_CHANGE");

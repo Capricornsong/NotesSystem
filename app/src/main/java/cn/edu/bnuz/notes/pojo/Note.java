@@ -2,10 +2,6 @@ package cn.edu.bnuz.notes.pojo;
 
 import org.litepal.crud.LitePalSupport;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
 public class Note extends LitePalSupport {
     long noteId;
     long userId;
@@ -14,10 +10,10 @@ public class Note extends LitePalSupport {
     String htmlcontent;
     int version;
     int delete;
-    String gmt_modified;
+    String gmtModified;
     //1表示内容已同步，0表示未同步。
     int isSyn ;
-    //
+    //1表示已删除，0表示未删除。
     int isDelete;
 
     public int getIsDelete() {
@@ -101,11 +97,11 @@ public class Note extends LitePalSupport {
 //    }
 
 
-    public void setGmt_modified(String gmt_modified) {
-        this.gmt_modified = gmt_modified;
+    public void setGmtModified(String gmtModified) {
+        this.gmtModified = gmtModified;
     }
-    public String getGmt_modified() {
-        return gmt_modified;
+    public String getGmtModified() {
+        return gmtModified;
     }
 
 //    public void setGmt_modified(String gmt_modified) throws ParseException {

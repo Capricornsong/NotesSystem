@@ -7,17 +7,24 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.Toast;
 import androidx.fragment.app.Fragment;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
+import cn.edu.bnuz.notes.MainActivity;
 import cn.edu.bnuz.notes.R;
 import cn.edu.bnuz.notes.login_register.Login;
+import cn.edu.bnuz.notes.websocket.UserCenter;
 
 import com.qmuiteam.qmui.widget.dialog.QMUIDialog;
 import com.qmuiteam.qmui.widget.dialog.QMUIDialogAction;
 import com.qmuiteam.qmui.widget.grouplist.QMUICommonListItemView;
+
+import org.w3c.dom.Text;
+
+import java.time.Instant;
 
 public class UserFragment  extends Fragment{
     private static final String ARG_SHOW_TEXT = "text";
@@ -29,6 +36,8 @@ public class UserFragment  extends Fragment{
     ImageButton userCome;
     @BindView(R.id.btn_quit)
     Button userQuit;
+    @BindView(R.id.user_name)
+    TextView userName;
     public UserFragment(){
 
     }
@@ -45,27 +54,20 @@ public class UserFragment  extends Fragment{
     private void initView() {
         userNotesCommonListView.setText("我的笔记");
         userNotesCommonListView.showNewTip(true);
+        userName.setText("nmm");
         userCome.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 //在屏幕上显示提示 Toast
-                new QMUIDialog.MessageDialogBuilder(getActivity())
-                        .setTitle("个人中心测试")
-                        .setMessage("这是个人中心")
-                        .addAction("取消", new QMUIDialogAction.ActionListener() {
-                            @Override
-                            public void onClick(QMUIDialog dialog, int index) {
-                                dialog.dismiss();
-                                Toast.makeText(getActivity(), "取消", Toast.LENGTH_SHORT).show();
-                            }
-                        });
+                Intent intent = new Intent(getContext(), UserCenter.class);
+                startActivity(intent);
             }
         });
         userQuit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 //在屏幕上显示提示 Toast
-                new QMUIDialog.MessageDialogBuilder(getActivity())
+                new QMUIDialog.MessageDialogBuilder(UserFragment.this.getContext())
                         .setTitle("退出系统")
                         .setMessage("您确定退出吗？")
                         .addAction("取消", new QMUIDialogAction.ActionListener() {
@@ -80,8 +82,9 @@ public class UserFragment  extends Fragment{
                             public void onClick(QMUIDialog dialog, int index) {
                                 Intent intent = new Intent(getContext(), Login.class);
                                 startActivity(intent);
+                                android.os.Process.killProcess(android.os.Process.myPid());
                             }
-                        });
+                        }).show();
             }
         });
     }

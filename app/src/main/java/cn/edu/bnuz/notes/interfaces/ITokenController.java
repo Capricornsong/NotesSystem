@@ -1,5 +1,7 @@
 package cn.edu.bnuz.notes.interfaces;
 
+import cn.edu.bnuz.notes.ntwpojo.UserInfo;
+
 public interface ITokenController {
     //获取token
     int GetToken(String username, String password);
@@ -40,6 +42,7 @@ public interface ITokenController {
      */
     int Register(String username,String email,String checkcode,String password);
 
+    UserInfo GetUserInfo();
 
 
 }

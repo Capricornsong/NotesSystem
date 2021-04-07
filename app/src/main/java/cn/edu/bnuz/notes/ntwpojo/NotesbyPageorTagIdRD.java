@@ -1,5 +1,8 @@
 package cn.edu.bnuz.notes.ntwpojo;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import java.util.List;
 
 public class NotesbyPageorTagIdRD extends BaseRD {
@@ -42,7 +45,7 @@ public class NotesbyPageorTagIdRD extends BaseRD {
             this.notes = notes;
         }
 
-        public static class Notes {
+        public static class Notes implements Parcelable {
             /**
              * gmtModified : 2020-08-16 16:29:00
              * noteId : 1294914038374985729
@@ -63,6 +66,26 @@ public class NotesbyPageorTagIdRD extends BaseRD {
                 this.gmtModified = getGmtModified();
                 this.noteId = noteId;
             }
+
+            protected Notes(Parcel in) {
+                gmtModified = in.readString();
+                noteId = in.readLong();
+                title = in.readString();
+                gmtCreate = in.readString();
+                content = in.readString();
+            }
+
+            public static final Creator<Notes> CREATOR = new Creator<Notes>() {
+                @Override
+                public Notes createFromParcel(Parcel in) {
+                    return new Notes(in);
+                }
+
+                @Override
+                public Notes[] newArray(int size) {
+                    return new Notes[size];
+                }
+            };
 
             public String getGmtModified() {
                 return gmtModified;
@@ -102,6 +125,21 @@ public class NotesbyPageorTagIdRD extends BaseRD {
 
             public void setContent(String content) {
                 this.content = content;
+            }
+
+
+            @Override
+            public int describeContents() {
+                return 0;
+            }
+
+            @Override
+            public void writeToParcel(Parcel parcel, int i) {
+                parcel.writeString(gmtModified);
+                parcel.writeLong(noteId);
+                parcel.writeString(title);
+                parcel.writeString(gmtCreate);
+                parcel.writeString(content);
             }
         }
     }

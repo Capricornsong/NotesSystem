@@ -1,7 +1,6 @@
 package cn.edu.bnuz.notes;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
 import android.Manifest;
@@ -10,14 +9,12 @@ import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Looper;
-import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -28,17 +25,10 @@ import android.widget.Toast;
 
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.qmuiteam.qmui.QMUILog;
-import com.qmuiteam.qmui.skin.QMUISkinManager;
 import com.qmuiteam.qmui.util.QMUIStatusBarHelper;
 import com.qmuiteam.qmui.widget.QMUITopBar;
 import com.qmuiteam.qmui.widget.dialog.QMUIDialog;
 import com.qmuiteam.qmui.widget.dialog.QMUIDialogAction;
-import com.scwang.smart.refresh.footer.ClassicsFooter;
-import com.scwang.smart.refresh.header.ClassicsHeader;
-import com.scwang.smart.refresh.layout.api.RefreshLayout;
-import com.scwang.smart.refresh.layout.listener.OnLoadMoreListener;
-import com.scwang.smart.refresh.layout.listener.OnRefreshListener;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -53,18 +43,19 @@ import java.util.concurrent.CountDownLatch;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import cn.edu.bnuz.notes.note_edit.Notes_Edit;
 import cn.edu.bnuz.notes.note_edit.RealPathFromUriUtils;
+import cn.edu.bnuz.notes.ntwpojo.GetFilesbyNoteId;
 import cn.edu.bnuz.notes.pojo.Note;
+import cn.edu.bnuz.notes.utils.util;
 import jp.wasabeef.richeditor.RichEditor;
 
+import static cn.edu.bnuz.notes.MyApplication.mFileController;
 import static cn.edu.bnuz.notes.MyApplication.mFileTransController;
 import static cn.edu.bnuz.notes.MyApplication.mNoteController;
-import static cn.edu.bnuz.notes.MyApplication.mShareConnection;
 import static cn.edu.bnuz.notes.MyApplication.mShareController;
 import static cn.edu.bnuz.notes.MyApplication.threadExecutor;
+import static cn.edu.bnuz.notes.constants.destPath;
 import static cn.edu.bnuz.notes.utils.util.NetCheck;
-import static org.litepal.LitePalApplication.getContext;
 
 public class  notes_show extends Activity {
     private static final int IMAGE = 1;
@@ -219,7 +210,6 @@ public class  notes_show extends Activity {
                             .show();
                 }
                 else{
-
                 }
             }
         });
@@ -227,17 +217,12 @@ public class  notes_show extends Activity {
         save_note.setOnClickListener(new View.OnClickListener() {
             //用于判断本地是否缓存过点开的这篇笔记
             int IsLocalNoteExcist = LitePal.where("noteId = ?",Long.toString(noteid)).find(Note.class).size();
-
             @Override
             public void onClick(View v) {
                 String html = mPreview_show.getText().toString();
-//              String html1 = "111<img src=\"/storage/emulated/0/Download/create.png\" alt=\"/storage/emulated/0/Download/create.png\" style=\"max-width:75%\"><img src=\"/storage/emulated/0/Download/create.png\" alt=\"/storage/emulated/0/Download/create.png\" style=\"max-width:75%\">";
-
                 System.out.println("html:" + mPreview_show.getText().toString());
-
                 Document doc = Jsoup.parseBodyFragment(html);
                 Element body = doc.body();
-
                 Note note = new Note();
                 note.setTitle(title_show.getText().toString());
                 note.setContent(body.text());
@@ -245,49 +230,49 @@ public class  notes_show extends Activity {
                 note.setNoteId(noteid);
                 note.setUserId(userid);
                 note.setVersion(version);
-
+                note.setGmtModified(gmt_modified);
+                Log.d(TAG, "onClick: ...");
                 //判断是否有编辑过
                 //未改动
                 if (html.equals("") && title_show.getText().toString().equals(title)) {
-
+                    note.setHtmlContent(htmlcontent);
                     if (IsLocalNoteExcist != 0 ) {
                         int LocalNoteVersion = LitePal.where("noteId = ?",Long.toString(noteid)).find(Note.class).get(0).getVersion();
                         if (LocalNoteVersion != version) {
                             //将云端的新版本更新到本地
-                            note.updateAll("noteId = ?", Long.toString(noteid));
+                            updatecacha(note);
                         }
-
                     }
                     else{
                         //保存在本地
                         note.setHtmlContent(htmlcontent);
                         note.setContent(content);
                         note.setIsSyn(1);
-                        note.setGmt_modified(gmt_modified);
-                        note.save();
+//                        note.setGmt_modified(gmt_modified);
+                        savecacha(note);
+//                        note.save();
                     }
-
                     finish();
                 }
-                //改动
+                //有改动
                 else{
                     Log.d(TAG, "onClick: 正在更新到云端");
                     Toast.makeText(notes_show.this,"修改正在上传至云端",Toast.LENGTH_SHORT).show();
-
                     //编辑后上传
                     onEdit(note);
-//                    Log.d(TAG, "onClick: finish2222222222222222222222222222222222");
+                    if (IsLocalNoteExcist != 0 ) {
+                        //将云端的新版本更新到本地
+                        updatecacha(note);
+                    }
+                    else {
+                        savecacha(note);
+                    }
                     finish();
                 }
             }
         });
 
-
-
-
-
         NotesTopBar.setTitle("编辑笔记");
-
         mEditor.setEditorHeight(200);
         mEditor.setEditorFontSize(22);
         mEditor.setPadding(10, 10, 10, 10);
@@ -600,13 +585,151 @@ public class  notes_show extends Activity {
         });
     }
 
+    //缓存在本地
+    public void savecacha(Note note){
+        List<String> mFilespPath = new ArrayList<>();
+        List<GetFilesbyNoteId.DataBean> mFileList = new ArrayList<>();
+        //创建一个CountDownLatch类，构造入参线程数
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        threadExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
 
-    //联网编辑后推出
+                mFileList.addAll(mFileController.GetFilesbyNoteId(note.getNoteId()));
+
+                //循环下载文件，并将返回的每个文件的本地路径存入mFilespPath
+                for (GetFilesbyNoteId.DataBean file : mFileList){
+                    //若本地已存在
+                    if (util.fileIsExists(file.getFileName())) {
+                        //路径替换为本地路径
+                        mFilespPath.add(destPath + file.getFileName());
+                    }
+                    else{
+                        //下载文件，并替换为本地路径
+                        mFilespPath.add(mFileTransController.FileDownload(file.getFileId(),file.getFileName()));
+                    }
+                }
+                countDownLatch.countDown();
+            }
+        });
+        //等待上方线程执行完
+        try {
+            countDownLatch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        for (int j = 0;j < mFilespPath.size();j++){
+            Log.d(TAG, j + " " + mFilespPath.get(j));
+        }
+        if (mFileList.size() != 0) {
+            for (String path : mFilespPath){
+                Log.d(TAG, "onItemClick: path:" + path);
+            }
+            String html = note.getHtmlContent();
+            Document doc = Jsoup.parseBodyFragment(html);
+            Element body = doc.body();
+            Elements img = doc.select("img");
+            Elements video = doc.select("video");
+
+            Log.d(TAG, "saveNote: imgsize" + img.size());
+            Log.d(TAG, "saveNote: doc" + doc.body().toString());
+            //替换img表点中的src
+            int index1 = 0;
+            int index2 = 0;
+            for (int j = 0;j < mFilespPath.size();j++){
+                if (mFilespPath.get(j).endsWith("jpeg") || mFilespPath.get(j).endsWith("png") || mFilespPath.get(j).endsWith("jpg") || mFilespPath.get(j).endsWith("PNG")){
+                    doc.select("img").get(index1).attr("src",mFilespPath.get(j)).attr("alt",mFilespPath.get(j));
+                    index1++;
+                }
+                else{
+                    doc.select("video").get(index2++).attr("src",mFilespPath.get(j));
+                    index2++;
+                }
+            }
+            Log.d(TAG, "saveNote: doc" + doc.body().toString());
+            note.setHtmlContent(doc.body().toString());
+            note.save();
+        }
+        else
+            note.save();
+
+    }
+    //更新本地缓存
+    public void updatecacha(Note note){
+        List<String> mFilespPath = new ArrayList<>();
+        List<GetFilesbyNoteId.DataBean> mFileList = new ArrayList<>();
+        //创建一个CountDownLatch类，构造入参线程数
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        threadExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+
+                mFileList.addAll(mFileController.GetFilesbyNoteId(note.getNoteId()));
+
+                //循环下载文件，并将返回的每个文件的本地路径存入mFilespPath
+                for (GetFilesbyNoteId.DataBean file : mFileList){
+                    //若本地已存在
+                    if (util.fileIsExists(file.getFileName())) {
+                        //路径替换为本地路径
+                        mFilespPath.add(destPath + file.getFileName());
+                    }
+                    else{
+                        //下载文件，并替换为本地路径
+                        mFilespPath.add(mFileTransController.FileDownload(file.getFileId(),file.getFileName()));
+                    }
+                }
+                countDownLatch.countDown();
+            }
+        });
+        //等待上方线程执行完
+        try {
+            countDownLatch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        for (int j = 0;j < mFilespPath.size();j++){
+            Log.d(TAG, j + " " + mFilespPath.get(j));
+        }
+        if (mFileList.size() != 0) {
+            for (String path : mFilespPath){
+                Log.d(TAG, "onItemClick: path:" + path);
+            }
+            String html = note.getHtmlContent();
+            Document doc = Jsoup.parseBodyFragment(html);
+            Element body = doc.body();
+            Elements img = doc.select("img");
+            Elements video = doc.select("video");
+//            Elements srclist = doc.select("src");
+            Log.d(TAG, "updatecacha: html:" + html);
+            Log.d(TAG, "saveNote: imgsize" + img.size());
+            Log.d(TAG, "saveNote: doc" + doc.toString());
+            //替换img表点中的src
+            int index1 = 0;
+            int index2 = 0;
+            for (int j = 0;j < mFilespPath.size();j++){
+                if (mFilespPath.get(j).endsWith("jpeg") || mFilespPath.get(j).endsWith("png") || mFilespPath.get(j).endsWith("jpg") || mFilespPath.get(j).endsWith("PNG")){
+                    doc.select("img").get(index1).attr("src",mFilespPath.get(j)).attr("alt",mFilespPath.get(j));
+                    index1++;
+                }
+                else{
+                    doc.select("video").get(index2++).attr("src",mFilespPath.get(j));
+                    index2++;
+                }
+
+            }
+            Log.d(TAG, "saveNote: doc" + doc.body().toString());
+            note.setHtmlContent(doc.body().toString());
+            note.updateAll("noteId = ?", Long.toString(note.getNoteId()));
+        }
+        else
+            note.updateAll("noteId = ?", Long.toString(note.getNoteId()));
+
+    }
+
+    //编辑后推出,上传至云端
     public void onEdit(Note note){
-
         Document doc = Jsoup.parseBodyFragment(note.getHtmlContent());
-        Element body = doc.body();
-
+//        Element body = doc.body();
         //准备过滤文件
         List<String> imagesUrl = new ArrayList<>();
         List<String> videosUrl = new ArrayList<>();
@@ -614,9 +737,8 @@ public class  notes_show extends Activity {
         Elements video = doc.select("video");
         int imgsize = img.size();
         int videosize = video.size();
-
+        //测试
         Log.d(TAG, "onClick: imgsize:" + imgsize);
-
         threadExecutor.execute(new Runnable() {
             @Override
             public void run() {
@@ -624,8 +746,9 @@ public class  notes_show extends Activity {
                 long result = mNoteController.UpdateNote(note);
                 Log.d(TAG, "run: 修改笔记结果码：:" + result);
                 if (result == 200) {
+                    //如果包含图片文件
                     if (imgsize != 0) {
-                        //准备待上传的文件list
+                        //准备待上传的图片list
                         for (Element s : img) {
                             if (!(s.attr("src").contains("http:/"))) {
                                 Log.d(TAG, "src:" + s.attr("src"));
@@ -637,18 +760,19 @@ public class  notes_show extends Activity {
                         }
                         Log.d(TAG, "run: imagesize" + imgsize);
                         //得到urllist：imagesUrl
+                        //开始替换
                         for (int i = 0;i < imagesUrl.size();i++){
                             doc.select("img").get(i).attr("src",imagesUrl.get(i)).attr("alt",imagesUrl.get(i));
                         }
                         //得到替换完成的doc
                         Log.d(TAG, "run: 替换完成的doc" + doc);
-                        note.setHtmlContent(doc.body().toString());
+//                        note.setHtmlContent(doc.body().toString());
                         //修改云端htmlcontent
-                        mNoteController.UpdateNoteHtmlContent(note);
+//                        mNoteController.UpdateNoteHtmlContent(note);
                     }
-
+                    //如果包含视频文件
                     if (videosize != 0) {
-                        //准备待上传的文件list
+                        //准备待上传的视频list
                         for (Element s : video) {
                             if (!(s.attr("src").contains("http:/"))) {
                                 Log.d(TAG, "src:" + s.attr("src"));
@@ -671,8 +795,9 @@ public class  notes_show extends Activity {
                         //修改云端htmlcontent
                         mNoteController.UpdateNoteHtmlContent(note);
                     }
-
                     Toast.makeText(notes_show.this,"已上传至云端",Toast.LENGTH_LONG).show();
+
+//                    Toast.makeText(notes_show.this,"已保存至本地",Toast.LENGTH_LONG).show();
                 }
                 else if (result == 201){
                     Toast.makeText(notes_show.this,"上传失败，已保存在本地",Toast.LENGTH_LONG).show();

@@ -13,9 +13,6 @@ import cn.edu.bnuz.notes.ntwpojo.NetNoteRD;
 import cn.edu.bnuz.notes.pojo.Note;
 
 import org.litepal.LitePal;
-import org.litepal.LitePalApplication;
-import org.litepal.crud.LitePalSupport;
-import org.litepal.exceptions.DataSupportException;
 
 import java.util.List;
 import cn.edu.bnuz.notes.pojo.Token;
@@ -105,7 +102,7 @@ public class MyReceiver extends BroadcastReceiver {
                             updateNews.setIsSyn(1);
                             updateNews.setUserId(c.getObject().getUserId());
                             updateNews.setNoteId(c.getObject().getNoteId());
-                            updateNews.setGmt_modified(c.getObject().getGmtModified());
+                            updateNews.setGmtModified(c.getObject().getGmtModified());
                             updateNews.setVersion(c.getObject().getVersion());
 //                            updateNews.setGmt_create(c.getObject().getGmtModified());
                             //用上传成功的返回值更新本地的笔记

@@ -8,13 +8,16 @@ import com.google.gson.JsonObject;
 
 import cn.edu.bnuz.notes.interfaces.ITokenController;
 import cn.edu.bnuz.notes.ntwpojo.DeleteNoteTagShareEmailCheckUsernameCheckRD;
+import cn.edu.bnuz.notes.ntwpojo.NotesbyPageorTagIdRD;
 import cn.edu.bnuz.notes.ntwpojo.RegisterRD;
 import cn.edu.bnuz.notes.ntwpojo.TokenRD;
+import cn.edu.bnuz.notes.ntwpojo.UserInfo;
 import cn.edu.bnuz.notes.pojo.Token;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import rxhttp.RxHttp;
 import rxhttp.wrapper.cahce.CacheMode;
 
 import static rxhttp.RxHttp.*;
@@ -164,7 +167,62 @@ public class TokenControllerImpl extends Binder implements ITokenController{
                         Log.d(TAG, "GetNoteByNoteID: code --> " + c.getCode());
                     }
                 });
+
         return result.get();
+    }
+
+    /**
+     * @return UserInfo.class
+     * {
+     *     "code": 200,
+     *     "msg": "SUCCESS",
+     *     "data": {
+     *         "userId": 888888888,
+     *         "username": "test",
+     *         "imgPath": "aaa",
+     *         "email": null,
+     *         "gmtCreate": "2020-05-08 21:57:23",
+     *         "gmtModified": "2020-09-24 20:41:14",
+     *         "version": 0,
+     *         "roles": [
+     *             {
+     *                 "roleId": 1,
+     *                 "roleName": "USER",
+     *                 "description": "普通用户",
+     *                 "gmtCreate": "2020-05-08 22:02:02"
+     *             }
+     *         ]
+     *     }
+     * }
+     */
+    @Override
+    public UserInfo GetUserInfo() {
+        UserInfo userbean = new UserInfo();
+        RxHttp.get("/user/userInfo")
+                .setSync()
+                .setDomainToauthIfAbsent()
+                .asClass(UserInfo.class)
+                .subscribe(userinfo -> {
+                    Log.d(TAG, "code: " + userinfo.getMsg());
+                    userbean.setCode(userinfo.getCode());
+                    userbean.setMsg(userinfo.getMsg());
+                    Log.d(TAG, "GetUserInfo: time" + userinfo.getData().getGmtCreate()) ;
+                    Log.d(TAG, "GetUserInfo: user" + userinfo.getData().getUsername()) ;
+                    Log.d(TAG, "GetUserInfo: time" + userinfo.getData().getUserId()) ;
+                    if (userinfo.getCode() == 200){
+                        userbean.setData(userinfo.data);
+                        Log.d(TAG, "GetUserInfo: 成功查询！");
+                    }
+                    else {
+                        Log.d(TAG, "查询userinfo 出现问题");
+                        Log.d(TAG, "查询userinfo: code --> " + userinfo.getCode());
+                    }
+                },throwable -> {
+                    Log.d("GetUserInfo", "获取用户信息失败" + throwable);
+                });
+
+
+        return userbean;
     }
 
 

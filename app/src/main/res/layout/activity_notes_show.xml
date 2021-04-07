@@ -29,7 +29,7 @@
             android:layout_height="60dp"
             android:id="@+id/title_show"
             android:hint="  请输入标题"
-            android:lines="1"
+            android:maxLines="1"
             />
         <jp.wasabeef.richeditor.RichEditor
             android:id="@+id/richeditor1"

@@ -14,6 +14,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.*;
 
+import cn.edu.bnuz.notes.ntwpojo.NotesbyPageorTagIdRD;
 import cn.edu.bnuz.notes.ntwpojo.TagListRD;
 import cn.edu.bnuz.notes.ntwpojo.TagsFilter;
 import cn.edu.bnuz.notes.pojo.Note;
@@ -93,7 +94,7 @@ public class MainActivity extends FragmentActivity {
     }
 
     private void gainUserId() {
-//        Log.d(TAG, "gainUserId: token");
+        Log.d(TAG, "gainUserId: token");
         Claims claims = null;
         try {
             claims = Jwts.parser()
@@ -143,6 +144,8 @@ public class MainActivity extends FragmentActivity {
         if (NetCheck()) {
             mTopBar.removeAllRightViews();
         }
+
+        //获取分享笔记按钮
         mTopBar.addLeftImageButton(R.mipmap.share,R.layout.notes_edit_ui).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -250,7 +253,7 @@ public class MainActivity extends FragmentActivity {
                     @Override
                     public void onClick(QMUIDialog dialog, int index) {
                         CountDownLatch countDownLatch2 = new CountDownLatch(1);
-                        List<TagsFilter.DataBean.NotesBean> notesBeanList = new ArrayList<>();
+                        List<NotesbyPageorTagIdRD.NotesPkg.Notes> notesBeanList = new ArrayList<>();
                         if (builder.getCheckedItemIndexes().length != 0) {
                             ArrayList<String> selectedTags = new ArrayList<>();
                             for(int i = 0;i < builder.getCheckedItemIndexes().length;i++){
@@ -260,9 +263,9 @@ public class MainActivity extends FragmentActivity {
                             threadExecutor.execute(new Runnable() {
                                 @Override
                                 public void run() {
-                                    TagsFilter.DataBean dataBean = mNoteController.GetNotesbyTags(selectedTags,1,50);
-                                    Log.d(TAG, "run: datesize" + dataBean.getNotes().size());
-                                    notesBeanList.addAll(dataBean.getNotes());
+                                    NotesbyPageorTagIdRD.NotesPkg notesPkg = mNoteController.GetNotesbyTags(selectedTags,1,50);
+                                    Log.d(TAG, "run: datesize" + notesPkg.getNotes().size());
+                                    notesBeanList.addAll(notesPkg.getNotes());
                                     countDownLatch2.countDown();
                                 }
                             });
@@ -495,7 +498,7 @@ public class MainActivity extends FragmentActivity {
                                     @Override
                                     public void onClick(QMUIDialog dialog, int index) {
                                         CountDownLatch countDownLatch2 = new CountDownLatch(1);
-                                        List<TagsFilter.DataBean.NotesBean> notesBeanList = new ArrayList<>();
+                                        List<NotesbyPageorTagIdRD.NotesPkg.Notes> notesBeanList = new ArrayList<>();
                                         if (builder.getCheckedItemIndexes().length != 0) {
                                             ArrayList<String> selectedTags = new ArrayList<>();
                                             for(int i = 0;i < builder.getCheckedItemIndexes().length;i++){
@@ -505,9 +508,9 @@ public class MainActivity extends FragmentActivity {
                                             threadExecutor.execute(new Runnable() {
                                                 @Override
                                                 public void run() {
-                                                    TagsFilter.DataBean dataBean = mNoteController.GetNotesbyTags(selectedTags,1,50);
-                                                    Log.d(TAG, "run: datesize" + dataBean.getNotes().size());
-                                                    notesBeanList.addAll(dataBean.getNotes());
+                                                    NotesbyPageorTagIdRD.NotesPkg notesPkg = mNoteController.GetNotesbyTags(selectedTags,1,50);
+                                                    Log.d(TAG, "run: datesize" + notesPkg.getNotes().size());
+                                                    notesBeanList.addAll(notesPkg.getNotes());
                                                     countDownLatch2.countDown();
                                                 }
                                             });
@@ -518,6 +521,11 @@ public class MainActivity extends FragmentActivity {
                                                 e.printStackTrace();
                                             }
                                             Log.d(TAG, "onClick: noteBeanList" + notesBeanList.toString());
+                                            NotesFragment notesFragment=new NotesFragment();
+                                            Bundle bundle=new Bundle();
+                                            bundle.putParcelableArrayList("notelist", (ArrayList<? extends Parcelable>) notesBeanList);
+//                            bundle.putString("noteList",);
+                                            notesFragment.setArguments(bundle);
                                             dialog.dismiss();
                                         }
                                         else {
@@ -535,7 +543,7 @@ public class MainActivity extends FragmentActivity {
                                 builder.show();
                             }
                         });
-                        if (NetCheck()) {
+                        if (!NetCheck()) {
                             mTopBar.removeAllRightViews();
                         }
                     }
@@ -544,55 +552,6 @@ public class MainActivity extends FragmentActivity {
                         mTopBar.removeAllLeftViews();
                         mTopBar.setTitle("知识树");
                         mTopBar.setTitleGravity(0);
-                        mTopBar.addRightImageButton(R.mipmap.tree_tag,R.layout.activity_main).setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                new QMUIDialog.MessageDialogBuilder(MainActivity.this)
-                                        .setTitle("Tag选择")
-                                        .setMessage("这是Tag选择按钮")
-                                        .addAction("取消", new QMUIDialogAction.ActionListener() {
-                                            @Override
-                                            public void onClick(QMUIDialog dialog, int index) {
-                                                dialog.dismiss();
-                                                Toast.makeText(MainActivity.this, "取消", Toast.LENGTH_SHORT).show();
-
-                                            }
-                                        })
-                                        .addAction("确定", new QMUIDialogAction.ActionListener() {
-                                            @Override
-                                            public void onClick(QMUIDialog dialog, int index) {
-
-                                                dialog.dismiss();
-                                                Toast.makeText(MainActivity.this, "确定", Toast.LENGTH_SHORT).show();
-                                            }
-                                        })
-                                        .show();
-                            }
-                        });
-                        mTopBar.addLeftImageButton(R.mipmap.tree_seek,R.layout.activity_main).setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                new QMUIDialog.MessageDialogBuilder(MainActivity.this)
-                                        .setTitle("知识树搜索")
-                                        .setMessage("这是知识树搜索按钮")
-                                        .addAction("取消", new QMUIDialogAction.ActionListener() {
-                                            @Override
-                                            public void onClick(QMUIDialog dialog, int index) {
-                                                dialog.dismiss();
-                                                Toast.makeText(MainActivity.this, "取消", Toast.LENGTH_SHORT).show();
-
-                                            }
-                                        })
-                                        .addAction("确定", new QMUIDialogAction.ActionListener() {
-                                            @Override
-                                            public void onClick(QMUIDialog dialog, int index) {
-                                                dialog.dismiss();
-                                                Toast.makeText(MainActivity.this, "确定", Toast.LENGTH_SHORT).show();
-                                            }
-                                        })
-                                        .show();
-                            }
-                        });
                     }
                     if(i==2) {
                         mTopBar.removeAllRightViews();

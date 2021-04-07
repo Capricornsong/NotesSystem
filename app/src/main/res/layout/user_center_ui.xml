@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context="cn.edu.bnuz.notes.websocket.UserCenter"
+    android:fitsSystemWindows="true"
+    android:background="@color/app_color_blue">
+
+    <com.qmuiteam.qmui.widget.QMUITopBar
+        android:id="@+id/top_bar_Center"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/qmui_topbar_height"
+        android:background="@color/app_color_blue"
+        android:fitsSystemWindows="true"
+        android:layout_weight="2"
+        app:qmui_topbar_title_color="@color/tab_panel_bg"
+        >
+    </com.qmuiteam.qmui.widget.QMUITopBar>
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/top_bar_Center"
+        android:background="@color/qmui_config_color_white"
+        >
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+            <TextView
+                android:id="@+id/user_center"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingBottom="@dimen/qmui_group_list_section_header_footer_padding_vertical"
+                android:paddingLeft="?attr/qmui_content_padding_horizontal"
+                android:paddingRight="?attr/qmui_content_padding_horizontal"
+                android:paddingTop="@dimen/qmui_group_list_section_header_footer_padding_vertical"
+                android:text="用户中心"
+                android:textColor="?attr/qmui_config_color_gray_3"
+                android:textSize="@dimen/qmui_group_list_section_header_footer_text_size" />
+            <!--边框分割细线-->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="1dp"/>
+            <GridLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/qmui_config_color_white"
+                android:columnCount="2"
+                android:focusable="true"
+                android:focusableInTouchMode="true">
+                <!--用户名-->
+                <TextView
+                    android:layout_width="111dp"
+                    android:layout_height="@dimen/qmui_list_item_height"
+                    android:gravity="center_vertical"
+                    android:text="用户名:"
+                    android:textColor="?attr/qmui_config_color_gray_1"
+                    android:textSize="?attr/qmui_common_list_item_title_h_text_size"
+                    android:layout_marginLeft="15dp"/>
+                <TextView
+                    android:id="@+id/user_center_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:hint="用户名"
+                    android:maxLength="20"
+                    android:textColor="?attr/qmui_config_color_gray_5"
+                    android:textSize="?attr/qmui_common_list_item_detail_h_text_size" />
+                <!--用户id-->
+                <TextView
+                    android:layout_width="111dp"
+                    android:layout_height="@dimen/qmui_list_item_height"
+                    android:gravity="center_vertical"
+                    android:text="用户id："
+                    android:textColor="?attr/qmui_config_color_gray_1"
+                    android:textSize="?attr/qmui_common_list_item_title_h_text_size"
+                    android:layout_marginLeft="15dp"/>
+                <TextView
+                    android:id="@+id/user_center_id"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:hint="用户id"
+                    android:maxLength="20"
+                    android:textColor="?attr/qmui_config_color_gray_5"
+                    android:textSize="?attr/qmui_common_list_item_detail_h_text_size" />
+                <!--账户创建时间-->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="@dimen/qmui_list_item_height"
+                    android:gravity="center_vertical"
+                    android:text="用户创建时间："
+                    android:textColor="?attr/qmui_config_color_gray_1"
+                    android:textSize="?attr/qmui_common_list_item_title_h_text_size"
+                    android:layout_marginLeft="15dp"/>
+                <TextView
+                    android:id="@+id/user_center_gmtCreate"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:hint="账户创建时间"
+                    android:maxLength="20"
+                    android:textColor="?attr/qmui_config_color_gray_5"
+                    android:textSize="?attr/qmui_common_list_item_detail_h_text_size" />
+
+            </GridLayout>
+        </LinearLayout>
+
+    </ScrollView>
+</RelativeLayout>
