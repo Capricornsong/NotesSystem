@@ -1,13 +1,22 @@
 package cn.edu.bnuz.notes;
 
+import android.annotation.TargetApi;
+import android.app.AlertDialog;
+import android.app.AppOpsManager;
 import android.app.Application;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.pm.ApplicationInfo;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
+import android.os.Build;
 import android.os.IBinder;
+import android.provider.Settings;
 import android.util.Log;
 
 import cn.edu.bnuz.notes.cache.NoteCache;
@@ -15,11 +24,12 @@ import cn.edu.bnuz.notes.cache.NoteCache;
 import org.litepal.LitePal;
 
 import java.io.File;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import cn.edu.bnuz.notes.impl.TokenControllerImpl;
 import cn.edu.bnuz.notes.interfaces.IFileController;
 import cn.edu.bnuz.notes.interfaces.IFileTrans;
 import cn.edu.bnuz.notes.interfaces.INoteController;
@@ -30,20 +40,28 @@ import java.net.URI;
 //
 import cn.edu.bnuz.notes.websocket.MyWebSocketClient;
 import cn.edu.bnuz.notes.websocket.MyWebSocketClientService;
+import cn.edu.bnuz.notes.websocket.SocketMessage;
 import rxhttp.RxHttp;
 import rxhttp.RxHttpPlugins;
-import rxhttp.wrapper.cahce.CacheMode;
 
 public class MyApplication extends Application {
     private static final String TAG = "MainActivity";
     private Boolean mIsbind;
     private IntentFilter mIntentFilter;
     public static MyReceiver mMyReceiver;
+    private Context mContext;
     //database
     private SQLiteDatabase mNoteDB;
-
+    private NoteSocketReceiver mNoteSocketReceiver ;
 
     //初始化线程池
+    /**
+     * corePoolSize: 指定了线程池中的线程数量，它的数量决定了添加的任务是开辟新的线程去执行，还是放到workQueue任务队列中去；
+     * maximumPoolSize：指定了线程池中的最大线程数量，这个参数会根据你使用的workQueue任务队列的类型，决定线程池会开辟的最大线程数量；
+     * keepAliveTime：当线程池中空闲线程数量超过corePoolSize时，多余的线程会在多长时间内被销毁；
+     * TimeUnit：时间单位
+     *
+     */
     public static final ThreadPoolExecutor threadExecutor = new ThreadPoolExecutor( 3, 4,  30,
             TimeUnit.SECONDS,new LinkedBlockingQueue<Runnable>(10)
     );
@@ -62,9 +80,15 @@ public class MyApplication extends Application {
         LitePal.initialize(this);
         //初始化接收器（网络监测）
         initReceiver();
-        //绑定服务
+        //启动websocket服务
+        startJWebSClientService();
+        //绑定服务所有
         doBindService();
+        //检测通知是否开启
+        Log.d(TAG, "onCreate: not");
+        checkNotification(this);
         //初始化数据库
+        Log.d(TAG, "onCreate: '22222");
         initDatabese();
         //初始化WebSocket服务
 //        initWebSocketService();
@@ -72,7 +96,7 @@ public class MyApplication extends Application {
 
     //初始化websocket连接
     public void initWebSocketService() {
-        URI uri = URI.create("ws://*******");
+        URI uri = URI.create("http://39.108.195.47:8001/endpoint-websocket");
         myWebSocketClient = new MyWebSocketClient(uri) {
             @Override
             public void onMessage(String message) {
@@ -82,7 +106,7 @@ public class MyApplication extends Application {
         };
         try {
             //连接
-            myWebSocketClient.connectBlocking();
+            Log.d(TAG, "initWebSocketService: " + myWebSocketClient.connectBlocking());
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -191,15 +215,23 @@ public class MyApplication extends Application {
         }
     }
 
+    /**
+     * 启动服务（websocket客户端服务）
+     */
+    private void startJWebSClientService() {
+        Intent intent = new Intent(this, MyWebSocketClientService.class);
+        startService(intent);
+    }
+
     //websocket
     public MyWebSocketClient client;
     public MyWebSocketClientService.MyWebSocketClientBinder binder;
-    public MyWebSocketClientService myWebSClientService;
+    public static MyWebSocketClientService myWebSClientService;
     private ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
             //服务与活动成功绑定
-            Log.e("MainActivity", "服务与活动成功绑定");
+            Log.e("MainActivity", "wesocket服务与活动成功绑定");
             binder = (MyWebSocketClientService.MyWebSocketClientBinder) iBinder;
             myWebSClientService = binder.getService();
             client = myWebSClientService.client;
@@ -208,7 +240,7 @@ public class MyApplication extends Application {
         @Override
         public void onServiceDisconnected(ComponentName componentName) {
             //服务与活动断开
-            Log.e("MainActivity", "服务与活动成功断开");
+            Log.e("MainActivity", "wesocket服务与活动成功断开");
         }
     };
 
@@ -275,6 +307,7 @@ public class MyApplication extends Application {
         Log.d(TAG, "doBindService:*/*******************FileTransController ");
 
         //WebSocket
+        Log.d(TAG, "doBindService: 绑定WebSocket服务。。");
         Intent bindIntent = new Intent(this, MyWebSocketClientService.class);
         bindService(bindIntent, serviceConnection, BIND_AUTO_CREATE);
     }
@@ -299,6 +332,115 @@ public class MyApplication extends Application {
         mIntentFilter.addAction("android.net.conn.CONNECTIVITY_CHANGE");
         mMyReceiver = new MyReceiver();
         registerReceiver(mMyReceiver,mIntentFilter);
+    }
+
+    private class NoteSocketReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String message=intent.getStringExtra("message");
+            SocketMessage chatMessage=new SocketMessage();
+            chatMessage.setContent(message);
+            chatMessage.setIsMeSend(0);
+//            chatMessage.setIsRead(1);
+            chatMessage.setTime(System.currentTimeMillis()+"");
+//            chatMessageList.add(chatMessage);
+//            initChatMsgListView();
+        }
+    }
+    /**
+     * 动态注册广播
+     */
+    private void doRegisterReceiver() {
+        mNoteSocketReceiver = new NoteSocketReceiver();
+        IntentFilter filter = new IntentFilter("ccn.edu.bnuz.notes.websocket");
+        registerReceiver(mNoteSocketReceiver, filter);
+    }
+
+    /*------------------------------------------------------------------------------通知相关------------------------------------------------------------------------*/
+    /**
+     * 检测是否开启通知
+     *
+     * @param context
+     */
+    private void checkNotification(final Context context) {
+        if (!isNotificationEnabled(context)) {
+            new AlertDialog.Builder(context).setTitle("温馨提示")
+                    .setMessage("你还未开启系统通知，将影响消息的接收，要去开启吗？")
+                    .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            setNotification(context);
+                        }
+                    }).setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+
+                }
+            }).show();
+        }
+    }
+    /**
+     * 如果没有开启通知，跳转至设置界面
+     *
+     * @param context
+     */
+    private void setNotification(Context context) {
+        Intent localIntent = new Intent();
+        //直接跳转到应用通知设置的代码：
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            localIntent.setAction("android.settings.APP_NOTIFICATION_SETTINGS");
+            localIntent.putExtra("app_package", context.getPackageName());
+            localIntent.putExtra("app_uid", context.getApplicationInfo().uid);
+        } else if (android.os.Build.VERSION.SDK_INT == Build.VERSION_CODES.KITKAT) {
+            localIntent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+            localIntent.addCategory(Intent.CATEGORY_DEFAULT);
+            localIntent.setData(Uri.parse("package:" + context.getPackageName()));
+        } else {
+            //4.4以下没有从app跳转到应用通知设置页面的Action，可考虑跳转到应用详情页面,
+            localIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            if (Build.VERSION.SDK_INT >= 9) {
+                localIntent.setAction("android.settings.APPLICATION_DETAILS_SETTINGS");
+                localIntent.setData(Uri.fromParts("package", context.getPackageName(), null));
+            } else if (Build.VERSION.SDK_INT <= 8) {
+                localIntent.setAction(Intent.ACTION_VIEW);
+                localIntent.setClassName("com.android.settings", "com.android.setting.InstalledAppDetails");
+                localIntent.putExtra("com.android.settings.ApplicationPkgName", context.getPackageName());
+            }
+        }
+        context.startActivity(localIntent);
+    }
+
+    /**
+     * 获取通知权限,监测是否开启了系统通知
+     *
+     * @param context
+     */
+    @TargetApi(Build.VERSION_CODES.KITKAT)
+    private boolean isNotificationEnabled(Context context) {
+
+        String CHECK_OP_NO_THROW = "checkOpNoThrow";
+        String OP_POST_NOTIFICATION = "OP_POST_NOTIFICATION";
+
+        AppOpsManager mAppOps = (AppOpsManager) context.getSystemService(Context.APP_OPS_SERVICE);
+        ApplicationInfo appInfo = context.getApplicationInfo();
+        String pkg = context.getApplicationContext().getPackageName();
+        int uid = appInfo.uid;
+
+        Class appOpsClass = null;
+        try {
+            appOpsClass = Class.forName(AppOpsManager.class.getName());
+            Method checkOpNoThrowMethod = appOpsClass.getMethod(CHECK_OP_NO_THROW, Integer.TYPE, Integer.TYPE,
+                    String.class);
+            Field opPostNotificationValue = appOpsClass.getDeclaredField(OP_POST_NOTIFICATION);
+
+            int value = (Integer) opPostNotificationValue.get(Integer.class);
+            return ((Integer) checkOpNoThrowMethod.invoke(mAppOps, value, uid, pkg) == AppOpsManager.MODE_ALLOWED);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
 //    public void initRxHttpCache(Context context) {

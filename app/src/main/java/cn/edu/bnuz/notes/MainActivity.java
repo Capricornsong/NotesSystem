@@ -60,6 +60,7 @@ import static cn.edu.bnuz.notes.MyApplication.mMyReceiver;
 import static cn.edu.bnuz.notes.pojo.Token.token;
 import static cn.edu.bnuz.notes.pojo.Token.UserInf;
 import static cn.edu.bnuz.notes.utils.util.NetCheck;
+import static cn.edu.bnuz.notes.utils.util.gainUserId;
 import static org.litepal.LitePalApplication.getContext;
 
 public class MainActivity extends FragmentActivity {
@@ -93,24 +94,24 @@ public class MainActivity extends FragmentActivity {
 
     }
 
-    private void gainUserId() {
-        Log.d(TAG, "gainUserId: token");
-        Claims claims = null;
-        try {
-            claims = Jwts.parser()
-                        .setSigningKey(("uaaNotes").getBytes("UTF-8"))
-                    .parseClaimsJws(token.substring(7))
-                    .getBody();
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
-
-        //获取用户名
-        String userinf = (String) claims.get("user_name");
-        Gson gson = new Gson();
-        UserInf = gson.fromJson(userinf,JsonObject.class);
-        Log.d(TAG, "gainUserId: username" + UserInf.get("userId").toString());
-    }
+//    private void gainUserId() {
+//        Log.d(TAG, "gainUserId: token");
+//        Claims claims = null;
+//        try {
+//            claims = Jwts.parser()
+//                        .setSigningKey(("uaaNotes").getBytes("UTF-8"))
+//                    .parseClaimsJws(token.substring(7))
+//                    .getBody();
+//        } catch (UnsupportedEncodingException e) {
+//            e.printStackTrace();
+//        }
+//
+//        //获取用户名
+//        String userinf = (String) claims.get("user_name");
+//        Gson gson = new Gson();
+//        UserInf = gson.fromJson(userinf,JsonObject.class);
+//        Log.d(TAG, "gainUserId: username" + UserInf.get("userId").toString());
+//    }
 
     //底部导航栏和相关函数
     private void initView() {

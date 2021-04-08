@@ -14,6 +14,8 @@ import cn.edu.bnuz.notes.ntwpojo.NoteSearchRD;
 import cn.edu.bnuz.notes.ntwpojo.NotesbyPageorTagIdRD;
 import cn.edu.bnuz.notes.pojo.Note;
 import cn.edu.bnuz.notes.pojo.Token;
+
+import static cn.edu.bnuz.notes.MyApplication.myWebSClientService;
 import static cn.edu.bnuz.notes.MyApplication.myWebSocketClient;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,6 +45,7 @@ public class NoteControllerImpl extends Binder implements INoteController{
 
         Log.d(TAG, "NoteControllerImpl: 初始化。。");
     }
+
 
 
     /**
@@ -96,7 +99,12 @@ public class NoteControllerImpl extends Binder implements INoteController{
                             newnote.save();
                             //websocket发送noteid到另一端
                             if (myWebSocketClient != null && myWebSocketClient.isOpen()) {
-                                myWebSocketClient.send(String.valueOf(c.getObject().getNoteId()));
+                                myWebSClientService.sendMsg(String.valueOf(c.getObject().getNoteId()));
+
+//                                myWebSocketClient.send();
+                            }
+                            else{
+                                Log.d(TAG, "CreateNote: socket连接已断开");
                             }
                             Log.d(TAG, "CreateNote: 成功创建文本笔记！");
                             Log.d(TAG, "CreateNote: content --> " + c.getObject().getGmtModified().toString());
@@ -539,7 +547,7 @@ public class NoteControllerImpl extends Binder implements INoteController{
     }
 
     /**
-     * 已删除
+     * *已删除*
      * 通过tagid查询用户笔记列表第一页
      * @param tagid
      * @param pageSize

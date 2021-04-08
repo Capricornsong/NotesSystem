@@ -64,6 +64,12 @@ public class TagControllerImpl extends Binder implements ITagController {
         return notelist;
     }
 
+    /**
+     * 添加标签
+     * @param tagname
+     * @return
+     *      200 成功
+     */
     @Override
     public int AddTag(String tagname) {
 
@@ -86,6 +92,11 @@ public class TagControllerImpl extends Binder implements ITagController {
         return responseCode.get();
     }
 
+    /**
+     * 删除标签
+     * @param tagid
+     * @return
+     */
     @Override
     public int DeleteTag(long tagid) {
         RxHttp.deleteForm("/tag/" + tagid)
@@ -104,6 +115,15 @@ public class TagControllerImpl extends Binder implements ITagController {
         return responseCode.get();
     }
 
+    /**
+     * 通过userid获取标签
+     * @param userid
+     * @return
+     *     tagId : 1
+     *     tagName : 学习
+     *     gmtCreate : 2020-08-13T15:31:47
+     *
+     */
     @Override
     public List<TagListRD.DataBean> GetTagByUserId(long userid) {
         List<TagListRD.DataBean> notelist = new ArrayList<>();

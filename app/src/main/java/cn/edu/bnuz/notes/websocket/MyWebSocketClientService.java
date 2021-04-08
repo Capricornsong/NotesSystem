@@ -3,11 +3,13 @@ package cn.edu.bnuz.notes.websocket;
 import android.annotation.SuppressLint;
 import android.app.KeyguardManager;
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.BitmapFactory;
 import android.os.Binder;
 import android.os.Build;
 import android.os.Handler;
@@ -22,17 +24,22 @@ import org.java_websocket.handshake.ServerHandshake;
 import java.net.URI;
 
 import cn.edu.bnuz.notes.MainActivity;
+import cn.edu.bnuz.notes.R;
 import cn.edu.bnuz.notes.constants;
 
 import static androidx.core.app.NotificationCompat.VISIBILITY_PUBLIC;
+import static cn.edu.bnuz.notes.constants.CHANNEL_ID;
+import static cn.edu.bnuz.notes.constants.CHANNEL_NAME;
 
 public class MyWebSocketClientService extends Service {
     public MyWebSocketClientService() {
     }
     private URI uri;
+    private String TAG = "MyWebSocketClientService";
     public MyWebSocketClient client;
     private MyWebSocketClientBinder mBinder = new MyWebSocketClientBinder();
     private final static int GRAY_SERVICE_ID = 1001;
+    NotificationChannel notificationChannel = null;
     //用于Activity和service通讯
     public class MyWebSocketClientBinder extends Binder {
         public MyWebSocketClientService getService() {
@@ -50,18 +57,33 @@ public class MyWebSocketClientService extends Service {
         initSocketClient();
         mHandler.postDelayed(heartBeatRunnable, HEART_BEAT_RATE);//开启心跳检测
 
+
+        PendingIntent pendingIntent = PendingIntent.getActivity(this,0, intent, 0);
+        Notification notification = new NotificationCompat.Builder(this,CHANNEL_ID).
+                setContentTitle("笔记推送服务").
+                setContentText("笔记推送服务正在运行中").
+                setWhen(System.currentTimeMillis()).
+                setSmallIcon(R.mipmap.ic_launcher).
+                setLargeIcon(BitmapFactory.decodeResource(getResources(),R.mipmap.ic_launcher)).
+                setContentIntent(pendingIntent).build();
+//        startForeground(1, notification);
+        if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.O){
+            notificationChannel = new NotificationChannel(CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_HIGH);
+            NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+            notificationManager.createNotificationChannel(notificationChannel);
+        }
         //设置service为前台服务，提高优先级
         if (Build.VERSION.SDK_INT < 18) {
             //Android4.3以下 ，隐藏Notification上的图标
-            startForeground(GRAY_SERVICE_ID, new Notification());
+            startForeground(GRAY_SERVICE_ID, notification);
         } else if(Build.VERSION.SDK_INT>18 && Build.VERSION.SDK_INT<25){
             //Android4.3 - Android7.0，隐藏Notification上的图标
             Intent innerIntent = new Intent(this, GrayInnerService.class);
             startService(innerIntent);
-            startForeground(GRAY_SERVICE_ID, new Notification());
+            startForeground(GRAY_SERVICE_ID, notification);
         }else{
             //Android7.0以上app启动后通知栏会出现一条"正在运行"的通知
-            startForeground(GRAY_SERVICE_ID, new Notification());
+            startForeground(GRAY_SERVICE_ID, notification);
         }
 
         acquireWakeLock();
@@ -104,13 +126,14 @@ public class MyWebSocketClientService extends Service {
      */
     private void initSocketClient() {
         URI uri = URI.create(constants.ws);
+
         client = new MyWebSocketClient(uri) {
             @Override
             public void onMessage(String message) {
                 Log.e("JWebSocketClientService", "收到的消息：" + message);
 
                 Intent intent = new Intent();
-                intent.setAction("com.xch.servicecallback.content");
+                intent.setAction("cn.edu.bnuz.notes.websocket");
                 intent.putExtra("message", message);
                 sendBroadcast(intent);
 
@@ -130,6 +153,7 @@ public class MyWebSocketClientService extends Service {
      * 连接websocket
      */
     private void connect() {
+        Log.d(TAG, "connect: ...");
         new Thread() {
             @Override
             public void run() {
@@ -206,12 +230,12 @@ public class MyWebSocketClientService extends Service {
         intent.setClass(this, MainActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         NotificationManager notifyManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        Notification notification = new NotificationCompat.Builder(this)
+        Notification notification = new NotificationCompat.Builder(this,CHANNEL_ID)
                 .setAutoCancel(true)
                 // 设置该通知优先级
                 .setPriority(Notification.PRIORITY_MAX)
 //                .setSmallIcon(R.drawable.icon)
-                .setContentTitle("服务器")
+                .setContentTitle("NoteSysyem")
                 .setContentText(content)
                 .setVisibility(VISIBILITY_PUBLIC)
                 .setWhen(System.currentTimeMillis())
@@ -223,7 +247,7 @@ public class MyWebSocketClientService extends Service {
     }
 
     //    -------------------------------------websocket心跳检测------------------------------------------------
-    private static final long HEART_BEAT_RATE = 10 * 1000;//每隔10秒进行一次对长连接的心跳检测
+    private static final long HEART_BEAT_RATE = 15 * 1000;//每隔10秒进行一次对长连接的心跳检测
     private Handler mHandler = new Handler();
     private Runnable heartBeatRunnable = new Runnable() {
         @Override
