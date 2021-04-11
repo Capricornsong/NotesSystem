@@ -80,7 +80,7 @@ public class NotesFragment extends Fragment {
     List<NotesbyPageorTagIdRD.NotesPkg.Notes> notesBeanList = new ArrayList<>();
     List<NotesbyPageorTagIdRD.NotesPkg.Notes> Lnotes=new ArrayList<>();
     List<NotesbyPageorTagIdRD.NotesPkg.Notes> Lnotes1=new ArrayList<>();
-    int yon=0;
+    int yon=0;//判断是否点击TAG按钮
     public NotesFragment() {
         // Required empty public constructor
     }
@@ -125,6 +125,11 @@ public class NotesFragment extends Fragment {
         mFilespPath.clear();
         mNotelist.addAll(LitePal.where("isDelete == ? and userId = ?","0",UserInf.get("userId").toString()).find(Note.class));
         mNote = new Note();
+        if(yon==0)
+        {
+            Lnotes1.clear();
+            notesBeanList.clear();
+        }
         if(yon==1) {
             Lnotes1.addAll(notesBeanList);
             mNotesAdapter = new NotesAdapter(getContext(),R.layout.simple_list_item,Lnotes1);
