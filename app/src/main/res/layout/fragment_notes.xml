@@ -47,6 +47,16 @@
         />
     </com.scwang.smart.refresh.layout.SmartRefreshLayout>
     <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/btn_tag"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:layout_above="@+id/add_notes"
+        android:layout_alignParentRight="true"
+        app:srcCompat="@mipmap/tree_tag"
+        android:backgroundTint="@color/app_color_blue"
+        />
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/add_notes"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

@@ -1,8 +1,10 @@
 package cn.edu.bnuz.notes.fragment_navigation;
 
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,13 +16,17 @@ import android.widget.Toast;
 
 import org.litepal.LitePal;
 
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 
 import com.qmuiteam.qmui.widget.dialog.QMUIDialog;
 import com.qmuiteam.qmui.widget.dialog.QMUIDialogAction;
 import com.scwang.smart.refresh.header.ClassicsHeader;
 import com.scwang.smart.refresh.header.MaterialHeader;
 import com.scwang.smart.refresh.layout.api.RefreshLayout;
+import com.scwang.smart.refresh.layout.listener.OnLoadMoreListener;
 import com.scwang.smart.refresh.layout.listener.OnRefreshListener;
 
 import java.util.ArrayList;
@@ -35,10 +41,12 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import cn.edu.bnuz.notes.notes_show;
 import cn.edu.bnuz.notes.ntwpojo.NotesbyPageorTagIdRD;
+import cn.edu.bnuz.notes.ntwpojo.TagListRD;
 import cn.edu.bnuz.notes.pojo.Note;
 import cn.edu.bnuz.notes.ntwpojo.GetFilesbyNoteId;
 
 import static cn.edu.bnuz.notes.MyApplication.mNoteController;
+import static cn.edu.bnuz.notes.MyApplication.mTagController;
 import static cn.edu.bnuz.notes.MyApplication.threadExecutor;
 import static cn.edu.bnuz.notes.pojo.Token.UserInf;
 import static cn.edu.bnuz.notes.utils.util.NetCheck;
@@ -58,6 +66,8 @@ public class NotesFragment extends Fragment {
     ListView mListView_contact;
     @BindView(R.id.refreshLayout)
     RefreshLayout refreshLayout;
+    @BindView(R.id.btn_tag)
+    ImageButton btn_tag;
     private NotesAdapter mNotesAdapter;
     private String TAG ="NoteFragment";
     private int index = 0;      //用于记录点击item的序号，用于destory方法。
@@ -67,6 +77,10 @@ public class NotesFragment extends Fragment {
     private List<GetFilesbyNoteId.DataBean> mFileList = new ArrayList<>();
     private List<NotesbyPageorTagIdRD.NotesPkg.Notes> filterList = new ArrayList<>();
     private List<Note> mNotelist = new ArrayList<>();       //用于存储从本地获取的笔记
+    List<NotesbyPageorTagIdRD.NotesPkg.Notes> notesBeanList = new ArrayList<>();
+    List<NotesbyPageorTagIdRD.NotesPkg.Notes> Lnotes=new ArrayList<>();
+    List<NotesbyPageorTagIdRD.NotesPkg.Notes> Lnotes1=new ArrayList<>();
+    int yon=0;
     public NotesFragment() {
         // Required empty public constructor
     }
@@ -85,7 +99,6 @@ public class NotesFragment extends Fragment {
         fragment.setArguments(args);
         return fragment;
     }
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -93,11 +106,6 @@ public class NotesFragment extends Fragment {
         super.onCreate(savedInstanceState);
         View rootView = inflater.inflate(R.layout.fragment_notes,null);
         unbinder = ButterKnife.bind(this, rootView);
-        Bundle bundle = getArguments();
-        if(bundle.getParcelableArrayList("notelist") != null)
-        {
-            filterList.addAll(bundle.getParcelableArrayList("notelist"));
-        }
         initView();
         //设置 Header 为 Material风格
         refreshLayout.setRefreshHeader(new MaterialHeader(getContext()).setShowBezierWave(true));
@@ -108,37 +116,22 @@ public class NotesFragment extends Fragment {
             public void onRefresh(RefreshLayout refreshlayout) {
                 initView();
                 refreshlayout.finishRefresh(2000/*,false*/);//传入false表示刷新失败
-
             }
         });
-        //加载
-//        refreshLayout.setOnLoadMoreListener(new OnLoadMoreListener() {
-//            @Override
-//            public void onLoadMore(RefreshLayout refreshlayout) {
-//                initView();
-//                refreshlayout.finishLoadMore(2000/*,false*/);//传入false表示加载失败
-//            }
-//        });
         return rootView;
     }
 
     private void initView() {
-        List<NotesbyPageorTagIdRD.NotesPkg.Notes> Lnotes=new ArrayList<>();
         mFilespPath.clear();
         mNotelist.addAll(LitePal.where("isDelete == ? and userId = ?","0",UserInf.get("userId").toString()).find(Note.class));
         mNote = new Note();
-        if(filterList.size() != 0) {
-            Lnotes.addAll(filterList);
-//            for(NotesbyPageorTagIdRD.NotesPkg.Notes note : Lnotes){
-//                Log.d(TAG, "initView: getContent" + note.getContent());
-//                Log.d(TAG, "initView: getTitle" + note.getTitle());
-//                Log.d(TAG, "initView: " + note.getNoteId());
-//                Log.d(TAG, "---------------------");
-//
-//            }
+        if(yon==1) {
+            Lnotes1.addAll(notesBeanList);
+            mNotesAdapter = new NotesAdapter(getContext(),R.layout.simple_list_item,Lnotes1);
+            mListView_contact.setAdapter(mNotesAdapter);
         }
-
-        else {
+        else
+            {
             //判断是否有网络
             if (NetCheck()) {
                 Toast.makeText(getContext(), "正在从云端获取笔记", Toast.LENGTH_SHORT).show();
@@ -157,6 +150,8 @@ public class NotesFragment extends Fragment {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+                mNotesAdapter = new NotesAdapter(getContext(),R.layout.simple_list_item,Lnotes);
+                mListView_contact.setAdapter(mNotesAdapter);
             }
             else{
                 Toast.makeText(getContext(), "无网络，已显示本地笔记", Toast.LENGTH_SHORT).show();
@@ -164,15 +159,12 @@ public class NotesFragment extends Fragment {
                     NotesbyPageorTagIdRD.NotesPkg.Notes newnote = new NotesbyPageorTagIdRD.NotesPkg.Notes(note.getTitle(),note.getContent(),note.getGmtModified(),note.getNoteId());
                     Lnotes.add(newnote);
                 }
+                mNotesAdapter = new NotesAdapter(getContext(),R.layout.simple_list_item,Lnotes);
+                mListView_contact.setAdapter(mNotesAdapter);
             }
         }
-
-
-
+        yon=0;
         Log.d(TAG, "initView: -*----------------------");
-        Log.d(TAG, "Lnotessize:"+Lnotes.get(0).getTitle());
-        mNotesAdapter = new NotesAdapter(getContext(),R.layout.simple_list_item,Lnotes);
-        mListView_contact.setAdapter(mNotesAdapter);
         mListView_contact.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
             /**+
@@ -283,6 +275,90 @@ public class NotesFragment extends Fragment {
                 startActivity(intent);
             }
         });
+        //TAG按钮
+        btn_tag.setOnClickListener(new View.OnClickListener() {
+            @Override
+
+            public void onClick(View v) {
+                //创建一个CountDownLatch类，构造入参线程数
+                CountDownLatch countDownLatch1 = new CountDownLatch(1);
+                List<TagListRD.DataBean> tags = new ArrayList<TagListRD.DataBean>();
+                threadExecutor.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        tags.addAll(mTagController.GetTagsByUser());
+                        countDownLatch1.countDown();
+                    }
+                });
+                //等待上方线程执行完
+                try {
+                    countDownLatch1.await();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                String[] items = new String[tags.size()];
+                for(int i = 0; i < tags.size(); i++){
+                    items[i] = tags.get(i).getTagName();
+                }
+                tags.addAll(mTagController.GetTagsByUser());
+
+                final QMUIDialog.MultiCheckableDialogBuilder builder = new QMUIDialog.MultiCheckableDialogBuilder(getContext())
+                        .addItems(items, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                            }
+                        });
+                builder.addAction("取消", new QMUIDialogAction.ActionListener() {
+                    @Override
+                    public void onClick(QMUIDialog dialog, int index) {
+                        dialog.dismiss();
+                    }
+                });
+                builder.addAction("确定", new QMUIDialogAction.ActionListener() {
+                    @Override
+                    public void onClick(QMUIDialog dialog, int index) {
+                        yon=1;
+                        CountDownLatch countDownLatch2 = new CountDownLatch(1);
+                        if (builder.getCheckedItemIndexes().length != 0) {
+                            ArrayList<String> selectedTags = new ArrayList<>();
+                            for(int i = 0;i < builder.getCheckedItemIndexes().length;i++){
+                                selectedTags.add(tags.get(builder.getCheckedItemIndexes()[i]).getTagName());
+                            }
+                            Log.d(TAG, "onClick: tags" + selectedTags.toString());
+                            threadExecutor.execute(new Runnable() {
+                                @Override
+                                public void run() {
+                                    NotesbyPageorTagIdRD.NotesPkg notesPkg = mNoteController.GetNotesbyTags(selectedTags,1,50);
+                                    Log.d(TAG, "run: datesize" + notesPkg.getNotes().size());
+                                    notesBeanList.addAll(notesPkg.getNotes());
+                                    countDownLatch2.countDown();
+                                }
+                            });
+                            //等待上方线程执行完
+                            try {
+                                countDownLatch2.await();
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            initView();
+                            dialog.dismiss();
+                        }
+                        else {
+                            Toast.makeText(getContext(), "请选择", Toast.LENGTH_SHORT).show();
+                        }
+
+//                        String result = "你选择了 ";
+//                        for (int i = 0; i < builder.getCheckedItemIndexes().length; i++) {
+//                            result += "" + ++builder.getCheckedItemIndexes()[i] + "; ";
+//                        }
+//                        Toast.makeText(MainActivity.this, result, Toast.LENGTH_SHORT).show();
+
+                    }
+                });
+                builder.show();
+            }
+        });
+
     }
 
     @Override
