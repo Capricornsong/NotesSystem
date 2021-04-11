@@ -2,6 +2,7 @@ package cn.edu.bnuz.notes.fragment_navigation;
 
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,15 +15,23 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.util.Random;
+import java.text.DecimalFormat;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 import androidx.fragment.app.Fragment;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
 import cn.edu.bnuz.notes.R;
+import cn.edu.bnuz.notes.ntwpojo.TreeNode;
+import cn.edu.bnuz.notes.ntwpojo.TreeRelationRD;
 import cn.edu.bnuz.notes.tree.DrawGeometryView;
 import cn.edu.bnuz.notes.tree.HVScrollView;
+
+import static cn.edu.bnuz.notes.MyApplication.mTreeController;
+import static cn.edu.bnuz.notes.MyApplication.threadExecutor;
 
 public class TreeFragment  extends Fragment{
 
@@ -44,6 +53,9 @@ public class TreeFragment  extends Fragment{
     HVScrollView hv;
     @BindView(R.id.layout_zone)
     RelativeLayout insertLayout;
+    private String TAG = "TreeFragment";
+    public List<TreeRelationRD> TreeRelationList;
+    public List<TreeNode> NodesList;
     @Override
     public void onDestroyView() {
         super.onDestroyView();
@@ -76,75 +88,19 @@ public class TreeFragment  extends Fragment{
 
         WindowManager wm = getActivity().getWindowManager();
         int width = wm.getDefaultDisplay().getWidth();
-
-        nodechild[] nc = new nodechild[1];
-        nc[0] = new nodechild("知识树", 1,0.6784384769251408,"知识",3);
-        drawbutton(width - 150, 50, 50, 1, nc, 1);
+        TreeNode[] nd =new TreeNode[1];
+        TreeRelationRD[] nc = new TreeRelationRD[1];
+        nc[0] = new TreeRelationRD("知识树", 1L,0,"知识树",3L);
+        drawbutton(width - 150, 50, 50, 1, nc, 1,0);
         return rootView;
     }
 
-    public class nodechild {
-        private String startNodeName;
-        private int startNode_id;
-        private double sim;
-        private String endNodeName;
-        private int endNode_id;
 
-        public nodechild(String startNodeName, int startNode_id, double sim, String endNodeName, int endNode_id) {
-            super();
-            this.startNodeName = startNodeName;
-            this.startNode_id = startNode_id;
-            this.sim = sim;
-            this.endNodeName = endNodeName;
-            this.endNode_id = endNode_id;
-
-        }
-        public String getStartNodeName() {
-            return startNodeName;
-        }
-
-        public void setStartNodeName(String startNodeName) {
-            this.startNodeName = startNodeName;
-        }
-
-        public int getStartNode_id() {
-            return startNode_id;
-        }
-
-        public void setStartNode_id(int startNode_id) {
-            this.startNode_id = startNode_id;
-        }
-
-        public double getSim() {
-            return sim;
-        }
-
-        public void setSim(double sim) {
-            this.sim = sim;
-        }
-
-        public String getEndNodeName() {
-            return endNodeName;
-        }
-
-        public void setEndNodeName(String endNodeName) {
-            this.endNodeName = endNodeName;
-        }
-
-        public int getEndNode_id() {
-            return endNode_id;
-        }
-
-        public void setEndNode_id(int endNode_id) {
-            this.endNode_id = endNode_id;
-        }
-    }
-
-    public void drawbutton(int button_y, int button_x, int line_x, final int tree_current, final nodechild[] nc, int starid) {
+    public void drawbutton(int button_y, int button_x, int line_x, final int tree_current, final TreeRelationRD[] nc, int length,int l) {
         int line_y = button_y;
         button_x = tree_current % 2 == 1 ? button_x : button_x - 100;
         int num = 1;
-        if (tree_current != 1) num = nc.length;// 下一层个数
+        if (tree_current != 1) num = length;// 下一层个数
         button_y = button_y - (num - 1) * bt_width / 2;
         if (button_y < tree_xnum[tree_current]) {
             button_y = tree_xnum[tree_current] + 100;
@@ -165,9 +121,16 @@ public class TreeFragment  extends Fragment{
                 bt[i].setBackgroundResource(R.drawable.button33);
             }
             bt[i].setTextColor(Color.WHITE);
-            bt[i].setTextSize(15 - (int) Math.sqrt(nc[i].getStartNodeName().length() - 1));
-            bt[i].setText(nc[i].getStartNodeName());
-            final int nc_id = nc[i].getStartNode_id();
+            if(nc[i].getStartNodeName()=="知识树")
+            {
+                bt[i].setText(nc[i].getEndNodeName());
+            }
+            else{
+                DecimalFormat    df   = new DecimalFormat("######0.00");
+                bt[i].setText(nc[i].getEndNodeName()+" "+df.format(nc[i].getSim()));
+            }
+
+            final Long nc_id = nc[i].getStartNode_id();
             ScaleAnimation animation = new ScaleAnimation(0.0f, 1.0f, 0.0f, 1.0f, Animation.RELATIVE_TO_SELF, 0.5f,
                     Animation.RELATIVE_TO_SELF, 0.5f);
             animation.setInterpolator(new BounceInterpolator());
@@ -188,8 +151,10 @@ public class TreeFragment  extends Fragment{
                     insertLayout.setEnabled(false);
                     int w = button_y_f + i1 * bt_paly_y;
                     int h = button_x_f + bt_paly_y / 2 * 3;
-                    getRemoteInfo(w, h, button_y_f + i1 * bt_paly_y, button_x_f, tree_current + 1, nc_id,
-                            nc[i1].getEndNode_id());
+                    if(l==0){
+                        getRemoteInfo(w, h, button_y_f + i1 * bt_paly_y, button_x_f, tree_current + 1, nc_id,
+                                nc[i1].getEndNode_id());
+                    }
                 }
             });
             layoutParams[i] = new RelativeLayout.LayoutParams(bt_w, bt_h);
@@ -223,23 +188,152 @@ public class TreeFragment  extends Fragment{
             mstack.push(bt[i], tree_current);
         }
     }
-
+    public void drawbutton1(int button_y, int button_x, int line_x, final int tree_current, final TreeNode[] nd, Long starid) {
+        int line_y = button_y;
+        button_x = tree_current % 2 == 1 ? button_x : button_x - 100;
+        int num = 1;
+        if (tree_current != 1) num = nd.length;// 下一层个数
+        button_y = button_y - (num - 1) * bt_width / 2;
+        if (button_y < tree_xnum[tree_current]) {
+            button_y = tree_xnum[tree_current] + 100;
+        }
+        if (tree_current > 2) hv.scrollTo(button_x - 400, button_y - 100);
+        if (tree_xnum[tree_current] < button_y + 200 + (num - 1) * bt_width)
+            tree_xnum[tree_current] = button_y + 200 + (num - 1) * bt_width;
+        final int button_y_f = button_y;
+        final int button_x_f = button_x;
+        for (int i = 0; i < num; i++) {
+            final int bt_paly_y = bt_width;
+            int bt_w = tree_current % 2 == 0 ? bt_width : 200;
+            int bt_h = 200;
+            bt[i] = new Button(getContext());
+            if (tree_current % 2 != 0) {
+                bt[i].setBackgroundResource(R.drawable.allokbutton);
+            } else {
+                bt[i].setBackgroundResource(R.drawable.button33);
+            }
+            bt[i].setTextColor(Color.WHITE);
+            bt[i].setText(nd[i].getName());
+            final Long nc_id = nd[i].getNodeId();
+            ScaleAnimation animation = new ScaleAnimation(0.0f, 1.0f, 0.0f, 1.0f, Animation.RELATIVE_TO_SELF, 0.5f,
+                    Animation.RELATIVE_TO_SELF, 0.5f);
+            animation.setInterpolator(new BounceInterpolator());
+            animation.setStartOffset(tree_current == 1 ? 1050 : 50);// 动画秒数。
+            animation.setFillAfter(true);
+            animation.setDuration(700);
+            bt[i].startAnimation(animation);
+            final int i1 = i;
+            bt[i].setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (model) mstack.pop(tree_current);
+                    if (((Button)v).getHint() != null) {
+                        Toast.makeText(getContext(), ((Button)v).getText(), Toast.LENGTH_LONG).show();
+                        return;
+                    }
+                    ((Button)v).setHint("1");
+                    insertLayout.setEnabled(false);
+                    int w = button_y_f + i1 * bt_paly_y;
+                    int h = button_x_f + bt_paly_y / 2 * 3;
+                    getRemoteInfo1(w, h, button_y_f + i1 * bt_paly_y, button_x_f, tree_current + 1, nd[i1].getName(),
+                            nd[i1].getNodeId());
+                }
+            });
+            layoutParams[i] = new RelativeLayout.LayoutParams(bt_w, bt_h);
+            layoutParams[i].topMargin = button_y + i * bt_paly_y;
+            layoutParams[i].leftMargin = button_x;
+            insertLayout.addView(bt[i], layoutParams[i]);
+            if (tree_current != 1) {
+                if (button_y + 100 + i * 300 - (line_y + 100) >= 0) {//为了优化内存，也是醉了
+                    view = new DrawGeometryView(getContext(), 50, 50, button_x + 100 - (line_x + bt_paly_y) + 50 + (tree_current % 2 == 0 ? 100 : 0), button_y + 100 + i * 300
+                            - (line_y + 100) + 50);
+                    layoutParams1[i] = new RelativeLayout.LayoutParams(Math.abs(line_x - button_x) + 500, 100 + button_y + i * 300 - line_y);
+                    view.invalidate();
+                    layoutParams1[i].topMargin = (line_y + 100) - 50;// line_y-600;//Math.min(line_y+100,button_y+100
+                    layoutParams1[i].leftMargin = (line_x + bt_paly_y) - 50;// line_x+300;
+                    if (tree_current % 2 == 0) layoutParams1[i].leftMargin -= 100;
+                    insertLayout.addView(view, layoutParams1[i]);
+                } else {
+                    view = new DrawGeometryView(getContext(), 50, -(button_y + 100 + i * 300 - (line_y + 100)) + 50, button_x - line_x - 150 + (tree_current % 2 == 0 ? 100 : 0), 50);
+                    layoutParams1[i] = new RelativeLayout.LayoutParams(Math.abs(line_x - button_x) + 500, 100 + Math.abs(button_y + i * 300
+                            - line_y));
+                    view.invalidate();
+                    layoutParams1[i].topMargin = (button_y + 100 + i * 300) - 50;// line_y-600;//Math.min(line_y+100,button_y+100
+                    layoutParams1[i].leftMargin = (line_x + bt_paly_y) - 50;// line_x+300;
+                    if (tree_current % 2 == 0) layoutParams1[i].leftMargin -= 100;
+                    insertLayout.addView(view, layoutParams1[i]);
+                }
+//                line入栈
+                mstack.push(view, tree_current);
+            }
+//            button入栈
+            mstack.push(bt[i], tree_current);
+        }
+    }
     public synchronized void getRemoteInfo(int paly_y, int paly_x, int ppaly_y, int ppaly_x, int tree_h,
-                                           int starid, int endid) {
-        int n = 5;
-        nodechild[] nc = new nodechild[n];
-//        for (int i = 0; i < n; i++) {
-//            nc[i] = new nodechild("人工智能", 1,0.6784384769251408,"知识",3);
-//        }
-        nc[0] = new nodechild("人工智能", 1,0.6784384769251408,"知识",3);
-        nc[1] = new nodechild("知识", 3,0.1,"知识",2);
-        nc[2] = new nodechild("软件", 1,0.5,"人工智能",3);
-        nc[3] = new nodechild("知识", 1,0.6784384769251408,"知识",3);
-        nc[4] = new nodechild("知识", 1,0.6784384769251408,"人工智能",3);
-        drawbutton(paly_y, paly_x, ppaly_x, tree_h, nc, starid);
+                                           Long starid, Long endid) {
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        threadExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                Log.d(TAG, "run: tree..............");
+                TreeRelationList = mTreeController.getRelation();
+                NodesList = mTreeController.GetNodes();
+//                Log.d(TAG, "run: " + TreeRelationList);
+                countDownLatch.countDown();
+            }
+        });
+        //等待上方线程执行完
+        try {
+            countDownLatch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        Log.d(TAG, "onClick: size" + TreeRelationList.size());
+        TreeRelationRD[] nc = new TreeRelationRD[TreeRelationList.size()];
+        TreeNode[] nd=new TreeNode[NodesList.size()];
+        for (int i = 0; i < NodesList.size(); i++) {
+            nd[i] = new TreeNode(NodesList.get(i).getNodeId(),NodesList.get(i).getName());
+        }
+        for (int i = 0; i < TreeRelationList.size(); i++) {
+            nc[i] = new TreeRelationRD(TreeRelationList.get(i).getStartNodeName(), TreeRelationList.get(i).getStartNode_id(), TreeRelationList.get(i).getSim(), TreeRelationList.get(i).getEndNodeName(), TreeRelationList.get(i).getEndNode_id());
+        }
+        drawbutton1(paly_y, paly_x, ppaly_x, tree_h, nd, starid);
     }
 
-
+    public synchronized void getRemoteInfo1(int paly_y, int paly_x, int ppaly_y, int ppaly_x, int tree_h,
+                                           String NodeName, Long Nodeid) {
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        threadExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                Log.d(TAG, "run: tree..............");
+                TreeRelationList = mTreeController.getRelation();
+                NodesList = mTreeController.GetNodes();
+//                Log.d(TAG, "run: " + TreeRelationList);
+                countDownLatch.countDown();
+            }
+        });
+        //等待上方线程执行完
+        try {
+            countDownLatch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        TreeRelationRD[] nc = new TreeRelationRD[TreeRelationList.size()];
+        int j=0;
+        for (int i = 0; i < TreeRelationList.size(); i++) {
+            if(NodeName.equals(TreeRelationList.get(i).getStartNodeName())) {
+                nc[j] = new TreeRelationRD(TreeRelationList.get(i).getStartNodeName(), TreeRelationList.get(i).getStartNode_id(), TreeRelationList.get(i).getSim(), TreeRelationList.get(i).getEndNodeName(), TreeRelationList.get(i).getEndNode_id());
+                j++;
+            }
+            if(NodeName.equals(TreeRelationList.get(i).getEndNodeName())) {
+                nc[j] = new TreeRelationRD(TreeRelationList.get(i).getStartNodeName(), TreeRelationList.get(i).getStartNode_id(), TreeRelationList.get(i).getSim(), TreeRelationList.get(i).getStartNodeName(), TreeRelationList.get(i).getEndNode_id());
+                j++;
+            }
+        }
+        drawbutton(paly_y, paly_x, ppaly_x, tree_h, nc, j,1);
+    }
     public class Mystack {
         View[] v = new View[1500];
         int[] treehigh = new int[1500];

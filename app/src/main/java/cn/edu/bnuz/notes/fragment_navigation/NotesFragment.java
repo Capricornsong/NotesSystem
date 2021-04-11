@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 import butterknife.*;
+import cn.edu.bnuz.notes.MainActivity;
 import cn.edu.bnuz.notes.note_edit.Notes_Edit;
 import cn.edu.bnuz.notes.R;
 import butterknife.BindView;
@@ -58,7 +59,6 @@ public class NotesFragment extends Fragment {
     @BindView(R.id.refreshLayout)
     RefreshLayout refreshLayout;
     private NotesAdapter mNotesAdapter;
-
     private String TAG ="NoteFragment";
     private int index = 0;      //用于记录点击item的序号，用于destory方法。
 
@@ -97,7 +97,6 @@ public class NotesFragment extends Fragment {
         if(bundle.getParcelableArrayList("notelist") != null)
         {
             filterList.addAll(bundle.getParcelableArrayList("notelist"));
-//            Lnotes.addAll(filterList);
         }
         initView();
         //设置 Header 为 Material风格
@@ -128,11 +127,17 @@ public class NotesFragment extends Fragment {
         mFilespPath.clear();
         mNotelist.addAll(LitePal.where("isDelete == ? and userId = ?","0",UserInf.get("userId").toString()).find(Note.class));
         mNote = new Note();
-
-        if(filterList.size() != 0)
-        {
+        if(filterList.size() != 0) {
             Lnotes.addAll(filterList);
+//            for(NotesbyPageorTagIdRD.NotesPkg.Notes note : Lnotes){
+//                Log.d(TAG, "initView: getContent" + note.getContent());
+//                Log.d(TAG, "initView: getTitle" + note.getTitle());
+//                Log.d(TAG, "initView: " + note.getNoteId());
+//                Log.d(TAG, "---------------------");
+//
+//            }
         }
+
         else {
             //判断是否有网络
             if (NetCheck()) {
@@ -146,7 +151,6 @@ public class NotesFragment extends Fragment {
                         Lnotes.addAll(notesPkg.getNotes());
                     }
                 });
-
                 thread.start();
                 try {
                     thread.join();      //待线程运行完再往下执行
@@ -166,6 +170,7 @@ public class NotesFragment extends Fragment {
 
 
         Log.d(TAG, "initView: -*----------------------");
+        Log.d(TAG, "Lnotessize:"+Lnotes.get(0).getTitle());
         mNotesAdapter = new NotesAdapter(getContext(),R.layout.simple_list_item,Lnotes);
         mListView_contact.setAdapter(mNotesAdapter);
         mListView_contact.setOnItemClickListener(new AdapterView.OnItemClickListener() {

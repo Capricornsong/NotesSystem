@@ -126,24 +126,22 @@ public class MyWebSocketClientService extends Service {
      */
     private void initSocketClient() {
         URI uri = URI.create(constants.ws);
-
         client = new MyWebSocketClient(uri) {
             @Override
             public void onMessage(String message) {
-                Log.e("JWebSocketClientService", "收到的消息：" + message);
-
+                Log.e(TAG, "收到的消息：" + message);
                 Intent intent = new Intent();
                 intent.setAction("cn.edu.bnuz.notes.websocket");
                 intent.putExtra("message", message);
                 sendBroadcast(intent);
-
+                //检查通知
                 checkLockAndShowNotification(message);
             }
 
             @Override
             public void onOpen(ServerHandshake handshakedata) {
                 super.onOpen(handshakedata);
-                Log.e("JWebSocketClientService", "websocket连接成功");
+                Log.e(TAG, "onOpen:websocket连接成功");
             }
         };
         connect();
@@ -175,7 +173,7 @@ public class MyWebSocketClientService extends Service {
      */
     public void sendMsg(String msg) {
         if (null != client) {
-            Log.e("JWebSocketClientService", "发送的消息：" + msg);
+            Log.e(TAG, "发送的消息：" + msg);
             client.send(msg);
         }
     }
@@ -252,7 +250,7 @@ public class MyWebSocketClientService extends Service {
     private Runnable heartBeatRunnable = new Runnable() {
         @Override
         public void run() {
-            Log.e("JWebSocketClientService", "心跳包检测websocket连接状态");
+            Log.e(TAG, "心跳包检测websocket连接状态");
             if (client != null) {
                 if (client.isClosed()) {
                     reconnectWs();
@@ -276,7 +274,7 @@ public class MyWebSocketClientService extends Service {
             @Override
             public void run() {
                 try {
-                    Log.e("JWebSocketClientService", "开启重连");
+                    Log.e(TAG, "开启重连");
                     client.reconnectBlocking();
                 } catch (InterruptedException e) {
                     e.printStackTrace();

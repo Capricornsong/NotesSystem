@@ -33,8 +33,8 @@ import static rxhttp.RxHttp.setOnParamAssembly;
 public class NoteControllerImpl extends Binder implements INoteController{
     private static final String TAG = "NoteControllerImpl";
     AtomicLong responseCode = new AtomicLong();
-    //设置全局请求头
     public NoteControllerImpl(){
+        //设置全局请求头
         setOnParamAssembly(new Function<Param<?>, Param<?>>() {
             @Override
             public Param apply(Param param) throws Exception {
@@ -509,7 +509,7 @@ public class NoteControllerImpl extends Binder implements INoteController{
                 },throwable -> {
 //                    Log.d("GetNotesByKey", "通过tagid查询笔记列表第一页失败" + throwable);
                 });
-        Log.d(TAG, "GetNotesbyTags: notelist" + notelist.getNotes().toString());
+        Log.d(TAG, "GetNotesbyTags: notelists" + notelist.getNotes().size());
         return notelist;
     }
 

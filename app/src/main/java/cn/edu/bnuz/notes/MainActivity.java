@@ -18,6 +18,8 @@ import cn.edu.bnuz.notes.ntwpojo.NotesbyPageorTagIdRD;
 import cn.edu.bnuz.notes.ntwpojo.TagListRD;
 import cn.edu.bnuz.notes.ntwpojo.TagsFilter;
 import cn.edu.bnuz.notes.pojo.Note;
+import cn.edu.bnuz.notes.websocket.MyWebSocketClient;
+import cn.edu.bnuz.notes.websocket.MyWebSocketClientService;
 import cn.edu.bnuz.notes.websocket.WebSocketClientService;
 import android.os.Bundle;
 import androidx.core.content.ContextCompat;
@@ -25,6 +27,7 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.viewpager.widget.ViewPager;
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -52,6 +55,7 @@ import static cn.edu.bnuz.notes.constants.destPath;
 import org.java_websocket.client.WebSocketClient;
 
 import java.io.UnsupportedEncodingException;
+import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -73,11 +77,11 @@ public class MainActivity extends FragmentActivity {
     private static final String TAG = "MainActivity";
     private List<Fragment> mFragments;
     private FragmentPagerAdapter mAdapter;
-    private WebSocketClient client;
-    private WebSocketClientService.WebSocketClientBinder binder;
+//    private WebSocketClient client;
+//    private WebSocketClientService.WebSocketClientBinder binder;
     private WebSocketClientService WebSClientService;
     private Note note;
-
+    public static Intent WebSocketServiceintent;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -88,30 +92,46 @@ public class MainActivity extends FragmentActivity {
         destPath = this.getExternalCacheDir().getPath() + "/";
         initView();
         gainUserId();
+        if (NetCheck()) {
+            Log.d(TAG, "开启websocket...........................");
+            //启动websocket服务
+            startMyWebSClientService();
+        }
         setContentView(root);
         //绑定webSocker服务
-//        bindService();
+    }
+
+    /**
+     * 启动服务（websocket客户端服务）
+     */
+    public void startMyWebSClientService() {
+        WebSocketServiceintent = new Intent(this, MyWebSocketClientService.class);
+        startService(WebSocketServiceintent);
 
     }
 
-//    private void gainUserId() {
-//        Log.d(TAG, "gainUserId: token");
-//        Claims claims = null;
-//        try {
-//            claims = Jwts.parser()
-//                        .setSigningKey(("uaaNotes").getBytes("UTF-8"))
-//                    .parseClaimsJws(token.substring(7))
-//                    .getBody();
-//        } catch (UnsupportedEncodingException e) {
-//            e.printStackTrace();
-//        }
-//
-//        //获取用户名
-//        String userinf = (String) claims.get("user_name");
-//        Gson gson = new Gson();
-//        UserInf = gson.fromJson(userinf,JsonObject.class);
-//        Log.d(TAG, "gainUserId: username" + UserInf.get("userId").toString());
-//    }
+    //websocket
+    public MyWebSocketClient client;
+    public MyWebSocketClientService.MyWebSocketClientBinder binder;
+    public static MyWebSocketClientService myWebSClientService;
+    private ServiceConnection serviceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+            //服务与活动成功绑定
+            Log.e("MainActivity", "wesocket服务与活动成功绑定");
+            binder = (MyWebSocketClientService.MyWebSocketClientBinder) iBinder;
+            myWebSClientService = binder.getService();
+            client = myWebSClientService.client;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName componentName) {
+            //服务与活动断开
+            Log.e("MainActivity", "wesocket服务与活动成功断开");
+        }
+    };
+
+
 
     //底部导航栏和相关函数
     private void initView() {
@@ -213,6 +233,7 @@ public class MainActivity extends FragmentActivity {
                 }
             }
         });
+
         mTopBar.addRightImageButton(R.mipmap.tree_tag,R.layout.activity_main).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -276,12 +297,16 @@ public class MainActivity extends FragmentActivity {
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
-                            Log.d(TAG, "onClick: noteBeanList" + notesBeanList.toString());
+                            Log.d(TAG, "onClick: noteBeanList.size" + notesBeanList.size());
                             NotesFragment notesFragment=new NotesFragment();
                             Bundle bundle=new Bundle();
                             bundle.putParcelableArrayList("notelist", (ArrayList<? extends Parcelable>) notesBeanList);
-//                            bundle.putString("noteList",);
                             notesFragment.setArguments(bundle);
+//                            notesFragment.onCreate(bundle);
+                            FragmentManager fragmentManager = getSupportFragmentManager();
+                            FragmentTransaction fragmentTransaction= fragmentManager.beginTransaction();
+                            fragmentTransaction.replace(R.id.fragment_vp,notesFragment);
+                            fragmentTransaction.commit();
                             dialog.dismiss();
                         }
                         else {
@@ -300,32 +325,6 @@ public class MainActivity extends FragmentActivity {
             }
         });
     }
-
-    /**
-     * 绑定服务
-     */
-    private void bindService() {
-        Intent bindIntent = new Intent(MainActivity.this, WebSocketClientService.class);
-        bindService(bindIntent, serviceConnection, BIND_AUTO_CREATE);
-    }
-
-    private ServiceConnection serviceConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
-            //服务与活动成功绑定
-            Log.e("MainActivity", "服务与活动成功绑定");
-            binder = (WebSocketClientService.WebSocketClientBinder) iBinder;
-            WebSClientService = binder.getService();
-            client = WebSClientService.client;
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName componentName) {
-            //服务与活动断开
-            Log.e("MainActivity", "服务与活动成功断开");
-        }
-    };
-
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -527,6 +526,10 @@ public class MainActivity extends FragmentActivity {
                                             bundle.putParcelableArrayList("notelist", (ArrayList<? extends Parcelable>) notesBeanList);
 //                            bundle.putString("noteList",);
                                             notesFragment.setArguments(bundle);
+                                            FragmentManager fragmentManager = getSupportFragmentManager();
+                                            FragmentTransaction fragmentTransaction= fragmentManager.beginTransaction();
+                                            fragmentTransaction.replace(R.id.fragment_vp,notesFragment);
+                                            fragmentTransaction.commit();
                                             dialog.dismiss();
                                         }
                                         else {

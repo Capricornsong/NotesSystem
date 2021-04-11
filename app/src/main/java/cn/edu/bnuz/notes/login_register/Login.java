@@ -19,11 +19,11 @@ import butterknife.ButterKnife;
 import cn.edu.bnuz.notes.MainActivity;
 import cn.edu.bnuz.notes.MyReceiver;
 import cn.edu.bnuz.notes.R;
+import cn.edu.bnuz.notes.ntwpojo.TreeRelationRD;
 import cn.edu.bnuz.notes.utils.ParseHtml1;
 
 import com.qmuiteam.qmui.util.QMUIStatusBarHelper;
 import com.qmuiteam.qmui.widget.QMUITopBar;
-
 
 import static cn.edu.bnuz.notes.MyApplication.mTokenController;
 import static cn.edu.bnuz.notes.MyApplication.threadExecutor;
@@ -89,8 +89,8 @@ public class Login extends Activity {
         register.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent i=new Intent(Login.this,Register.class);
-                startActivity(i);
+                Intent intent=new Intent(Login.this,Register.class);
+                startActivity(intent);
 
             }
         });

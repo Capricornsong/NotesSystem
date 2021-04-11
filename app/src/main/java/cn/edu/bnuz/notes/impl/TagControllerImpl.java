@@ -25,8 +25,8 @@ public class TagControllerImpl extends Binder implements ITagController {
     AtomicReference<Boolean> result = new AtomicReference<>(false);
     private static final String TAG = "TagControllerImpl";
     AtomicInteger responseCode = new AtomicInteger();
-    //设置全局请求头
     public TagControllerImpl(){
+        //设置全局请求头
         setOnParamAssembly(new Function<Param<?>, Param<?>>() {
             @Override
             public Param apply(Param param) throws Exception {

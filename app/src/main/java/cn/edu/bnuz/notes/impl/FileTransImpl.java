@@ -24,8 +24,8 @@ public class FileTransImpl extends Binder implements IFileTrans {
     AtomicInteger responsecode = new AtomicInteger();
     private static final String TAG = "FileTransImpl";
 //    AtomicReference<String> path = null;
-    //设置全局请求头
     public FileTransImpl(){
+        //设置全局请求头
         setOnParamAssembly(new Function<Param<?>, Param<?>>() {
             @Override
             public Param apply(Param param) throws Exception {

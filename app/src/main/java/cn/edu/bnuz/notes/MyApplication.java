@@ -38,14 +38,17 @@ import cn.edu.bnuz.notes.interfaces.ITagController;
 import cn.edu.bnuz.notes.interfaces.ITokenController;
 import java.net.URI;
 //
+import cn.edu.bnuz.notes.interfaces.ITreeController;
 import cn.edu.bnuz.notes.websocket.MyWebSocketClient;
 import cn.edu.bnuz.notes.websocket.MyWebSocketClientService;
 import cn.edu.bnuz.notes.websocket.SocketMessage;
 import rxhttp.RxHttp;
 import rxhttp.RxHttpPlugins;
 
+import static cn.edu.bnuz.notes.utils.util.NetCheck;
+
 public class MyApplication extends Application {
-    private static final String TAG = "MainActivity";
+    private static final String TAG = "MyApplication";
     private Boolean mIsbind;
     private IntentFilter mIntentFilter;
     public static MyReceiver mMyReceiver;
@@ -75,42 +78,24 @@ public class MyApplication extends Application {
         NoteCache.initDiskCache(this);
         DatabaseHelper databaseHelper = new DatabaseHelper(this);
         databaseHelper.getWritableDatabase();
-
+//        if (NetCheck()) {
+//            Log.d(TAG, "开启websocket");
+//            //启动websocket服务
+//            startMyWebSClientService();
+//        }
         //Litepal相关
         LitePal.initialize(this);
         //初始化接收器（网络监测）
         initReceiver();
-        //启动websocket服务
-        startJWebSClientService();
         //绑定服务所有
         doBindService();
         //检测通知是否开启
-        Log.d(TAG, "onCreate: not");
         checkNotification(this);
         //初始化数据库
         Log.d(TAG, "onCreate: '22222");
         initDatabese();
-        //初始化WebSocket服务
-//        initWebSocketService();
     }
 
-    //初始化websocket连接
-    public void initWebSocketService() {
-        URI uri = URI.create("http://39.108.195.47:8001/endpoint-websocket");
-        myWebSocketClient = new MyWebSocketClient(uri) {
-            @Override
-            public void onMessage(String message) {
-                //message就是接收到的消息
-                Log.e("JWebSClientService", message);
-            }
-        };
-        try {
-            //连接
-            Log.d(TAG, "initWebSocketService: " + myWebSocketClient.connectBlocking());
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
 
     //TokenController
 //    private TokenControllerImpl mTokenController;
@@ -197,6 +182,22 @@ public class MyApplication extends Application {
             Log.d(TAG, "onServiceDisconnected:.." + componentName);
         }
     }
+    //TreeController
+    public static MyApplication.TreeConnection mTreeConnection;
+    public static ITreeController mTreeController;
+    private class TreeConnection implements ServiceConnection {
+
+        @Override
+        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+            Log.d(TAG, "onServiceConnected:.." + componentName);
+            mTreeController = (ITreeController) iBinder;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName componentName) {
+            Log.d(TAG, "onServiceDisconnected:.." + componentName);
+        }
+    }
 
     //FileTranController
     public static MyApplication.FileTransConnection mFileTransConnection;
@@ -215,10 +216,12 @@ public class MyApplication extends Application {
         }
     }
 
+
+
     /**
      * 启动服务（websocket客户端服务）
      */
-    private void startJWebSClientService() {
+    public void startMyWebSClientService() {
         Intent intent = new Intent(this, MyWebSocketClientService.class);
         startService(intent);
     }
@@ -306,10 +309,20 @@ public class MyApplication extends Application {
         mIsbind = bindService(FileTranControlIntent, mFileTransConnection, BIND_AUTO_CREATE);
         Log.d(TAG, "doBindService:*/*******************FileTransController ");
 
-        //WebSocket
-        Log.d(TAG, "doBindService: 绑定WebSocket服务。。");
-        Intent bindIntent = new Intent(this, MyWebSocketClientService.class);
-        bindService(bindIntent, serviceConnection, BIND_AUTO_CREATE);
+        //TreeControl
+        Log.d(TAG, "doBindService: 绑定FileTransController服务。。");
+        Intent TreeControlIntent = new Intent();
+        TreeControlIntent.setAction("com.bnuz.noteservice.ACTION_TREE_CONTROLLER");
+        TreeControlIntent.setPackage(this.getPackageName());
+        TreeControlIntent.addCategory(Intent.CATEGORY_DEFAULT);
+        mTreeConnection = new MyApplication.TreeConnection();
+        mIsbind = bindService(TreeControlIntent, mTreeConnection, BIND_AUTO_CREATE);
+        Log.d(TAG, "doBindService:*/*******************TreeController ");
+
+//        //WebSocket
+//        Log.d(TAG, "doBindService: 绑定WebSocket服务。。");
+//        Intent bindIntent = new Intent(this, MyWebSocketClientService.class);
+//        bindService(bindIntent, serviceConnection, BIND_AUTO_CREATE);
     }
 
 

@@ -569,18 +569,16 @@ public class Notes_Edit extends Activity {
                 if (result > 9999999) {
                     note.setNoteId(result);
 
-                    //准备待上传的图片list
                     if (imgsize != 0) {
+                        //准备待上传的图片list
                         for (Element s : img) {
                             Log.d(TAG, "src:" + s.attr("src"));
+                            //获取需要上传的本地文件
                             File file = new File(s.attr("src"));
+                            //调用上传方法，返回文件上传路径。
                             String url = mFileTransController.FileUpload(file,result);
-                            try {
-                                Thread.sleep(1000);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
                             Log.d(TAG, "run: filesuploadresult:" + url);
+                            //按顺序将路径添加到图片List
                             imagesUrl.add(url);
                         }
                         Log.d(TAG, "run: imagesUrl.size" + imagesUrl.size());

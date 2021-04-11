@@ -23,8 +23,8 @@ public class FileControllerImpl extends Binder implements IFileController {
     private static final String TAG = "FileControllerImpl";
 
 
-    //设置全局请求头
     public FileControllerImpl(){
+        //设置全局请求头
         setOnParamAssembly(new Function<Param<?>, Param<?>>() {
             @Override
             public Param apply(Param param) throws Exception {

@@ -34,8 +34,8 @@ public class ShareControllerImpl extends Binder implements IShareController {
     private static final ThreadPoolExecutor threadExecutor = new ThreadPoolExecutor( 3, 4,  30,
             TimeUnit.SECONDS,new LinkedBlockingQueue<Runnable>(10)
     );
-    //设置全局请求头
     public ShareControllerImpl(){
+        //设置全局请求头
         setOnParamAssembly(new Function<Param<?>, Param<?>>() {
             @Override
             public Param apply(Param param) throws Exception {

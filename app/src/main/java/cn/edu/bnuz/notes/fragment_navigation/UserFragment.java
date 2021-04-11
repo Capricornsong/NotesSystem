@@ -16,6 +16,7 @@ import butterknife.Unbinder;
 import cn.edu.bnuz.notes.MainActivity;
 import cn.edu.bnuz.notes.R;
 import cn.edu.bnuz.notes.login_register.Login;
+import cn.edu.bnuz.notes.websocket.MyWebSocketClientService;
 import cn.edu.bnuz.notes.websocket.UserCenter;
 
 import com.qmuiteam.qmui.widget.dialog.QMUIDialog;
@@ -25,6 +26,8 @@ import com.qmuiteam.qmui.widget.grouplist.QMUICommonListItemView;
 import org.w3c.dom.Text;
 
 import java.time.Instant;
+
+import static cn.edu.bnuz.notes.MyApplication.myWebSocketClient;
 
 public class UserFragment  extends Fragment{
     private static final String ARG_SHOW_TEXT = "text";
@@ -82,6 +85,8 @@ public class UserFragment  extends Fragment{
                             public void onClick(QMUIDialog dialog, int index) {
                                 Intent intent = new Intent(getContext(), Login.class);
                                 startActivity(intent);
+                                getContext().stopService(MainActivity.WebSocketServiceintent);
+
                                 android.os.Process.killProcess(android.os.Process.myPid());
                             }
                         }).show();

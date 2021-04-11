@@ -627,12 +627,12 @@ public class  notes_show extends Activity {
             }
             String html = note.getHtmlContent();
             Document doc = Jsoup.parseBodyFragment(html);
-            Element body = doc.body();
-            Elements img = doc.select("img");
-            Elements video = doc.select("video");
+//            Element body = doc.body();
+//            Elements img = doc.select("img");
+//            Elements video = doc.select("video");
 
-            Log.d(TAG, "saveNote: imgsize" + img.size());
-            Log.d(TAG, "saveNote: doc" + doc.body().toString());
+//            Log.d(TAG, "saveNote: imgsize" + img.size());
+//            Log.d(TAG, "saveNote: doc" + doc.body().toString());
             //替换img表点中的src
             int index1 = 0;
             int index2 = 0;
@@ -696,13 +696,13 @@ public class  notes_show extends Activity {
             }
             String html = note.getHtmlContent();
             Document doc = Jsoup.parseBodyFragment(html);
-            Element body = doc.body();
-            Elements img = doc.select("img");
-            Elements video = doc.select("video");
+//            Element body = doc.body();
+//            Elements img = doc.select("img");
+//            Elements video = doc.select("video");
 //            Elements srclist = doc.select("src");
-            Log.d(TAG, "updatecacha: html:" + html);
-            Log.d(TAG, "saveNote: imgsize" + img.size());
-            Log.d(TAG, "saveNote: doc" + doc.toString());
+//            Log.d(TAG, "updatecacha: html:" + html);
+//            Log.d(TAG, "saveNote: imgsize" + img.size());
+//            Log.d(TAG, "saveNote: doc" + doc.toString());
             //替换img表点中的src
             int index1 = 0;
             int index2 = 0;

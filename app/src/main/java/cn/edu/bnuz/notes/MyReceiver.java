@@ -125,33 +125,6 @@ public class MyReceiver extends BroadcastReceiver {
             //获取本地创删除但云云端未删除的笔记
             Log.d(TAG, "Isdelete:" + note.getIsDelete() + " notetitle:" + note.getTitle());
             mNoteController.DeleteNote(note.getNoteId());
-//            RxHttp.postJson("/note")
-//                    .setSync()
-//                    .add("content",note.getContent())
-//                    .add("htmlContent",note.getHtmlContent())
-//                    .add("title",note.getTitle())
-//                    .add("userId",note.getUserId())
-//                    .asClass(NetNoteRD.class)
-//                    .subscribe(c -> {
-//                        Log.d("NoteController", "code: " + c.getCode());
-//                        if (c.getCode() == 200){
-//                            Log.d(TAG, "CreateNote: 成功创建文本笔记！");
-//                            Log.d(TAG, "CreateNote: content --> " + c.getObject().getGmtModified().toString());
-//
-//                            Note updateNews = new Note();
-//                            //表示已经同步
-//                            updateNews.setIsSyn(1);
-//                            updateNews.setUserId(c.getObject().getUserId());
-//                            updateNews.setNoteId(c.getObject().getNoteId());
-//                            updateNews.setGmt_modified(c.getObject().getGmtModified());
-//                            updateNews.setVersion(1);
-////                            updateNews.setGmt_create(c.getObject().getGmtModified());
-//                            //用上传成功的返回值更新本地的笔记
-//                            updateNews.updateAll("IsSyn = ? and content = ?","0",Long.toString(c.getObject().getNoteId()));
-//                        }
-//                    },throwable -> {
-//                        Log.d(TAG + "uploadNotes", "创建文本笔记失败" + throwable);
-//                    });
         }
     }
 

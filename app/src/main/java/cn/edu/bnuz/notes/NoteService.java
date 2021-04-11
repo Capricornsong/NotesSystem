@@ -11,7 +11,9 @@ import cn.edu.bnuz.notes.impl.NoteControllerImpl;
 import cn.edu.bnuz.notes.impl.ShareControllerImpl;
 import cn.edu.bnuz.notes.impl.TagControllerImpl;
 import cn.edu.bnuz.notes.impl.TokenControllerImpl;
+import cn.edu.bnuz.notes.impl.TreeControllerImpl;
 import cn.edu.bnuz.notes.interfaces.IFileController;
+import cn.edu.bnuz.notes.interfaces.ITreeController;
 
 public class NoteService extends Service {
     public NoteService() {
@@ -39,6 +41,8 @@ public class NoteService extends Service {
                 return new TagControllerImpl();
             }else if ("com.bnuz.noteservice.ACTION_FILETRANS_CONTROLLER".equals(action)){
                 return new FileTransImpl();
+            } else if ("com.bnuz.noteservice.ACTION_TREE_CONTROLLER".equals(action)){
+                return new TreeControllerImpl();
             }
         }
         return null;
