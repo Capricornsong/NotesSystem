@@ -42,7 +42,19 @@ public interface ITokenController {
      */
     int Register(String username,String email,String checkcode,String password);
 
+    /**
+     * 获取用户信息
+     * @return
+     *
+     */
     UserInfo GetUserInfo();
+
+    Boolean UpdatePassword(String oldPassword, String newPassword);
+
+
+    Boolean UpdateUsername(String newName);
+
+
 
 
 }

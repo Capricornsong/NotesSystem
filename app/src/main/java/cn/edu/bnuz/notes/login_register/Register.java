@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -24,6 +25,8 @@ import cn.edu.bnuz.notes.R;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.qmuiteam.qmui.util.QMUIStatusBarHelper;
 import com.qmuiteam.qmui.widget.QMUITopBar;
+
+import cn.edu.bnuz.notes.note_edit.Notes_Edit;
 import jp.wasabeef.richeditor.RichEditor;
 
 import static cn.edu.bnuz.notes.MyApplication.mNoteController;
@@ -46,6 +49,7 @@ public class Register extends Activity {
     Button btn_verifycode;
     @BindView(R.id.button_register)
     Button btn_register;
+    private Handler mHandler = new Handler();
 
     final String TAG = getClass().getSimpleName();
     @Override
@@ -79,28 +83,51 @@ public class Register extends Activity {
                 threadExecutor.execute(new Runnable() {
                     @Override
                     public void run() {
-                        Looper.prepare();
+//                        Looper.prepare();
 
                         if (mTokenController.UsernameCheck(user_name.getText().toString()) != 200){
-                            Toast.makeText(Register.this,"用户已被使用",Toast.LENGTH_LONG).show();
+                            mHandler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Toast.makeText(Register.this,"用户已被使用",Toast.LENGTH_LONG).show();
+                                }
+                            });
                         }
                         else {
                             int  result = mTokenController.Register(user_name.getText().toString(),user_email.getText().toString(),email_verifycode.getText().toString(),user_password.getText().toString());
                             Log.d(TAG, "result: " + result);
                             if (result==200) {
-                                Toast.makeText(Register.this,"注册成功",Toast.LENGTH_LONG).show();
+                                mHandler.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Toast.makeText(Register.this,"注册成功",Toast.LENGTH_LONG).show();
+                                    }
+                                });
+
                                 Intent i=new Intent(Register.this,Login.class);
                                 startActivity(i);
                             }
                             else if (result == 10085) {
-                                Toast.makeText(Register.this,"验证码错误",Toast.LENGTH_LONG).show();
+                                mHandler.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Toast.makeText(Register.this,"验证码错误",Toast.LENGTH_LONG).show();
+                                    }
+                                });
+
                             }
                             else{
                                 //其他情况
-                                Toast.makeText(Register.this,"注册失败",Toast.LENGTH_LONG).show();
+                                mHandler.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Toast.makeText(Register.this,"注册失败",Toast.LENGTH_LONG).show();
+                                    }
+                                });
+
                             }
                         }
-                        Looper.loop();
+//                        Looper.loop();
                     }
                 });
             }

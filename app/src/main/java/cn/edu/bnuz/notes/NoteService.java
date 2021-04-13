@@ -15,7 +15,7 @@ import cn.edu.bnuz.notes.impl.TreeControllerImpl;
 import cn.edu.bnuz.notes.interfaces.IFileController;
 import cn.edu.bnuz.notes.interfaces.ITreeController;
 
-public class NoteService extends Service {
+public class  NoteService extends Service {
     public NoteService() {
     }
 

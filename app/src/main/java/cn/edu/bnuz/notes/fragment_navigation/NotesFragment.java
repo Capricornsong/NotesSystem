@@ -78,8 +78,6 @@ public class NotesFragment extends Fragment {
     private List<NotesbyPageorTagIdRD.NotesPkg.Notes> filterList = new ArrayList<>();
     private List<Note> mNotelist = new ArrayList<>();       //用于存储从本地获取的笔记
     List<NotesbyPageorTagIdRD.NotesPkg.Notes> notesBeanList = new ArrayList<>();
-    List<NotesbyPageorTagIdRD.NotesPkg.Notes> Lnotes=new ArrayList<>();
-    List<NotesbyPageorTagIdRD.NotesPkg.Notes> Lnotes1=new ArrayList<>();
     int yon=0;//判断是否点击TAG按钮
     public NotesFragment() {
         // Required empty public constructor
@@ -122,7 +120,10 @@ public class NotesFragment extends Fragment {
     }
 
     private void initView() {
+        List<NotesbyPageorTagIdRD.NotesPkg.Notes> Lnotes=new ArrayList<>();
+        List<NotesbyPageorTagIdRD.NotesPkg.Notes> Lnotes1=new ArrayList<>();
         mFilespPath.clear();
+        mNotelist.clear();
         mNotelist.addAll(LitePal.where("isDelete == ? and userId = ?","0",UserInf.get("userId").toString()).find(Note.class));
         mNote = new Note();
         if(yon==0)
@@ -157,6 +158,7 @@ public class NotesFragment extends Fragment {
                 }
                 mNotesAdapter = new NotesAdapter(getContext(),R.layout.simple_list_item,Lnotes);
                 mListView_contact.setAdapter(mNotesAdapter);
+
             }
             else{
                 Toast.makeText(getContext(), "无网络，已显示本地笔记", Toast.LENGTH_SHORT).show();
@@ -241,7 +243,6 @@ public class NotesFragment extends Fragment {
                             public void onClick(QMUIDialog dialog, int index) {
                                 dialog.dismiss();
                                 Toast.makeText(getContext(), "取消", Toast.LENGTH_SHORT).show();
-
                             }
                         })
                         .addAction("确定", new QMUIDialogAction.ActionListener() {
@@ -251,6 +252,7 @@ public class NotesFragment extends Fragment {
                                     @Override
                                     public void run() {
                                         mNoteController.DeleteNote(Lnotes.get(i).getNoteId());
+                                        LitePal.deleteAll(Note.class, "noteId = ?" , String.valueOf(Lnotes.get(i).getNoteId()));
 
                                     }
                                 });
@@ -281,6 +283,12 @@ public class NotesFragment extends Fragment {
             }
         });
         //TAG按钮
+        if (NetCheck()) {
+            btn_tag.setVisibility(View.VISIBLE);
+        }
+        else{
+            btn_tag.setVisibility(View.INVISIBLE);
+        }
         btn_tag.setOnClickListener(new View.OnClickListener() {
             @Override
 

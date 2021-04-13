@@ -13,6 +13,7 @@ import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
@@ -138,7 +139,7 @@ public class Notes_Edit extends Activity {
         QMUIStatusBarHelper.translucent(this);
         View root = LayoutInflater.from(this).inflate(R.layout.notes_edit_ui, null);
         ButterKnife.bind(this, root);
-
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_MODE_CHANGED);
         initView();
         setContentView(root);
     }
@@ -563,7 +564,6 @@ public class Notes_Edit extends Activity {
             @Override
             public void run() {
 //                Looper.prepare();
-
                 long result = mNoteController.CreateNote(note);
                 Log.d(TAG, "run: 新建笔记结果码：:" + result);
                 if (result > 9999999) {

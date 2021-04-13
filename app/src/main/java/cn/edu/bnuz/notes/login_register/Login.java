@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -20,6 +21,7 @@ import cn.edu.bnuz.notes.MainActivity;
 import cn.edu.bnuz.notes.MyReceiver;
 import cn.edu.bnuz.notes.R;
 import cn.edu.bnuz.notes.ntwpojo.TreeRelationRD;
+import cn.edu.bnuz.notes.user_center.UserCenter;
 import cn.edu.bnuz.notes.utils.ParseHtml1;
 
 import com.qmuiteam.qmui.util.QMUIStatusBarHelper;
@@ -42,7 +44,7 @@ public class Login extends Activity {
     @BindView(R.id.et_psw)
     EditText user_psw;
     private String TAG = "Login";
-
+    private Handler mHandler = new Handler();
     private Boolean mIsbind;
     private IntentFilter mIntentFilter;
     public static MyReceiver mMyReceiver;
@@ -67,21 +69,33 @@ public class Login extends Activity {
                 threadExecutor.execute(new Runnable() {
                     @Override
                     public void run() {
-                        Looper.prepare();
+//                        Looper.prepare();
                         Log.d(TAG, "run: user" + user_name.getText().toString() + " pass" + user_psw.getText().toString());
                         int result =  mTokenController.GetToken(user_name.getText().toString(),user_psw.getText().toString());
                         Log.d(TAG, "run: result" + result);
                         //1为用户名和密码正确
                         if (result == 1) {
-                            Toast.makeText(Login.this,"登陆成功",Toast.LENGTH_SHORT).show();
+                            mHandler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Toast.makeText(Login.this,"登陆成功",Toast.LENGTH_SHORT).show();
+                                }
+                            });
+
                             Intent i=new Intent(Login.this,MainActivity.class);
                             startActivity(i);
                             finish();
                         }
                         else{
-                            Toast.makeText(Login.this,"用户名或密码错误",Toast.LENGTH_SHORT).show();
+                            mHandler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Toast.makeText(Login.this,"用户名或密码错误",Toast.LENGTH_LONG).show();
+                                }
+                            });
+//                            Toast.makeText(Login.this,"用户名或密码错误",Toast.LENGTH_SHORT).show();
                         }
-                        Looper.loop();
+//                        Looper.loop();
                     }
                 });
             }

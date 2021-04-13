@@ -9,6 +9,7 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Binder;
 import android.os.Build;
@@ -63,8 +64,8 @@ public class MyWebSocketClientService extends Service {
                 setContentTitle("笔记推送服务").
                 setContentText("笔记推送服务正在运行中").
                 setWhen(System.currentTimeMillis()).
-                setSmallIcon(R.mipmap.ic_launcher).
-                setLargeIcon(BitmapFactory.decodeResource(getResources(),R.mipmap.ic_launcher)).
+                setSmallIcon(R.mipmap.note_icon).
+                setLargeIcon(BitmapFactory.decodeResource(getResources(),R.mipmap.note_icon)).
                 setContentIntent(pendingIntent).build();
 //        startForeground(1, notification);
         if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.O){
@@ -237,8 +238,10 @@ public class MyWebSocketClientService extends Service {
                 .setContentText(content)
                 .setVisibility(VISIBILITY_PUBLIC)
                 .setWhen(System.currentTimeMillis())
+                .setLargeIcon(BitmapFactory.decodeResource(getResources(),R.mipmap.note_icon))
                 // 向通知添加声音、闪灯和振动效果
                 .setDefaults(Notification.DEFAULT_VIBRATE | Notification.DEFAULT_ALL | Notification.DEFAULT_SOUND)
+
                 .setContentIntent(pendingIntent)
                 .build();
         notifyManager.notify(1, notification);//id要保证唯一

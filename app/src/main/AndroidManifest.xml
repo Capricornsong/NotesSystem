@@ -5,18 +5,20 @@
     <application
         android:name=".MyApplication"
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/note_icon"
         android:label="@string/app_name"
         android:networkSecurityConfig="@xml/network_security_config"
         android:requestLegacyExternalStorage="true"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:roundIcon="@mipmap/note_icon"
         android:supportsRtl="true"
         android:theme="@style/QMUI.Compat">
-        <activity android:name=".websocket.UserCenter"></activity>
+        <activity android:name=".user_center.edit_password"></activity>
+        <activity android:name=".user_center.UserCenter" />
         <activity android:name=".notes_show" />
-        <activity android:name=".login_register.Find_Psw"></activity>
-        <activity android:name=".login_register.Register"></activity>
-        <activity android:name=".note_edit.Notes_Edit"></activity>
+        <activity android:name=".login_register.Find_Psw" />
+        <activity android:name=".login_register.Register" />
+        <activity android:name=".note_edit.Notes_Edit"
+            android:windowSoftInputMode="stateAlwaysHidden"/>
         <activity android:name=".login_register.Login">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -26,85 +28,80 @@
         </activity>
         <activity android:name=".MainActivity" />
 
-        <service
-            android:name=".websocket.MyWebSocketClientService$GrayInnerService"
-            android:enabled="true"
-            android:exported="false"
-            android:process=":gray" />
-
         <receiver
             android:name=".MyReceiver"
             android:enabled="true"
             android:exported="true" />
 
         <service
+            android:name=".websocket.MyWebSocketClientService$GrayInnerService"
+            android:enabled="true"
+            android:exported="false"
+            android:process=":gray" />
+        <service
             android:name=".websocket.MyWebSocketClientService"
             android:enabled="true"
-            android:exported="true" /> <!-- 定义服务 -->
+            android:exported="true"
+            /> <!-- 定义服务 -->
         <service
             android:name=".NoteService"
             android:enabled="true"
             android:exported="true">
 
             <!-- 定义action -->
-            <intent-filter>
+            <intent-filter> <!-- 用户管理 -->
                 <action android:name="com.bnuz.noteservice.ACTION_TOKEN_CONTROLLER" />
 
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
-            <intent-filter>
+            <intent-filter> <!-- 笔记管理 -->
                 <action android:name="com.bnuz.noteservice.ACTION_NOTE_CONTROLLER" />
 
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
-            <intent-filter>
+            <intent-filter> <!-- 文件管理 -->
                 <action android:name="com.bnuz.noteservice.ACTION_FILE_CONTROLLER" />
 
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
-            <intent-filter>
+            <intent-filter> <!-- 笔记分享管理 -->
                 <action android:name="com.bnuz.noteservice.ACTION_SHARE_CONTROLLER" />
 
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
-            <intent-filter>
+            <intent-filter> <!-- 标签管理 -->
                 <action android:name="com.bnuz.noteservice.ACTION_TAG_CONTROLLER" />
 
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
-            <intent-filter>
+            <intent-filter> <!-- 文件传输管理 -->
                 <action android:name="com.bnuz.noteservice.ACTION_FILETRANS_CONTROLLER" />
 
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
-            <intent-filter>
+            <intent-filter> <!-- 知识树 -->
                 <action android:name="com.bnuz.noteservice.ACTION_TREE_CONTROLLER" />
 
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
-
         </service>
     </application>
+
     <uses-feature android:name="android.hardware.camera" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" /> <!-- 相机权限 -->
-    <uses-permission android:name="android.permission.INTERNET" /> <!-- 写入SD卡的权限：如果你希望保存相机拍照后的照片 -->
-    <uses-permission android:name="android.permission.CAMERA" /> <!-- 读取SD卡的权限:打开相册选取图片所必须的权限 -->
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-
-    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-
+    <uses-permission android:name="android.permission.CAMERA" /> <!-- 相机权限 -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" /> <!-- 写入SD卡的权限：如果你希望保存相机拍照后的照片 -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" /> <!-- 读取SD卡的权限:打开相册选取图片所必须的权限 -->
     <uses-permission android:name="android.permission.INTERNET" />
-    <!-- 解锁屏幕需要的权限 -->
-    <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
-    <!-- 申请电源锁需要的权限 -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" /> <!-- 解锁屏幕需要的权限 -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" /> <!-- 申请电源锁需要的权限 -->
+    <uses-permission android:name="android.permission.INTERNET" /> <!-- 震动权限 -->
+    <uses-permission android:name="android.permission.DISABLE_KEYGUARD" /> <!-- android 9.0之后使用前台服务，需要添加权限 -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <!--震动权限-->
     <uses-permission android:name="android.permission.VIBRATE" />
-    <!--android 9.0之后使用前台服务，需要添加权限-->
+
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+
 </manifest>

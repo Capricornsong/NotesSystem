@@ -46,8 +46,6 @@ public class NoteControllerImpl extends Binder implements INoteController{
         Log.d(TAG, "NoteControllerImpl: 初始化。。");
     }
 
-
-
     /**
      * 创建笔记(有缓存)
      * @param note

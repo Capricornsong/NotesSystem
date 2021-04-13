@@ -1,6 +1,8 @@
 package cn.edu.bnuz.notes.fragment_navigation;
 
+import android.content.Intent;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -129,7 +131,7 @@ public class TreeFragment  extends Fragment{
                 DecimalFormat    df   = new DecimalFormat("######0.00");
                 bt[i].setText(nc[i].getEndNodeName()+" "+df.format(nc[i].getSim()));
             }
-
+            String tree_content=nc[i].getEndNodeName();
             final Long nc_id = nc[i].getStartNode_id();
             ScaleAnimation animation = new ScaleAnimation(0.0f, 1.0f, 0.0f, 1.0f, Animation.RELATIVE_TO_SELF, 0.5f,
                     Animation.RELATIVE_TO_SELF, 0.5f);
@@ -154,6 +156,14 @@ public class TreeFragment  extends Fragment{
                     if(l==0){
                         getRemoteInfo(w, h, button_y_f + i1 * bt_paly_y, button_x_f, tree_current + 1, nc_id,
                                 nc[i1].getEndNode_id());
+                    }
+                    else
+                    {
+                        Intent intent=new Intent();
+                        intent.setAction("android.intent.action.VIEW");
+                        Uri link=Uri.parse("https://www.baidu.com/s?wd="+tree_content);
+                        intent.setData(link);
+                        startActivity(intent);
                     }
                 }
             });

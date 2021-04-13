@@ -38,18 +38,6 @@
             android:layout_marginRight="25dp"
             />
         </RelativeLayout>
-        <com.qmuiteam.qmui.widget.grouplist.QMUICommonListItemView
-                android:id="@+id/user_notes"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:qmui_accessory_type="chevron"
-                app:qmui_orientation="vertical"
-                app:qmui_common_list_title_color="@color/qmui_s_link_color"
-                app:qmui_common_list_detail_color="@color/qmui_config_color_red"
-                android:layout_below="@id/user"
-                android:layout_marginTop="30dp"
-                android:background="@color/app_color_blue_3_pressed"
-        />
         <Button
             android:id="@+id/btn_quit"
             android:text="退出登录"
@@ -59,8 +47,8 @@
             android:layout_gravity="center"
             android:layout_width="320dp"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/user_notes"
+            android:layout_below="@+id/user"
             android:layout_centerHorizontal="true"
-            android:layout_marginTop="200dp"
+            android:layout_marginTop="350dp"
             />
 </RelativeLayout>

@@ -7,6 +7,7 @@ import android.util.Log;
 import com.google.gson.JsonObject;
 
 import cn.edu.bnuz.notes.interfaces.ITokenController;
+import cn.edu.bnuz.notes.ntwpojo.BaseRD;
 import cn.edu.bnuz.notes.ntwpojo.DeleteNoteTagShareEmailCheckUsernameCheckRD;
 import cn.edu.bnuz.notes.ntwpojo.NotesbyPageorTagIdRD;
 import cn.edu.bnuz.notes.ntwpojo.RegisterRD;
@@ -15,6 +16,7 @@ import cn.edu.bnuz.notes.ntwpojo.UserInfo;
 import cn.edu.bnuz.notes.pojo.Token;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import rxhttp.RxHttp;
@@ -223,6 +225,64 @@ public class TokenControllerImpl extends Binder implements ITokenController{
 
 
         return userbean;
+    }
+
+    /**
+     * 更改用户密码
+     * @param oldPassword
+     * @param newPassword
+     * @return
+     */
+    @Override
+    public Boolean UpdatePassword(String oldPassword, String newPassword) {
+        AtomicBoolean result = new AtomicBoolean();
+        RxHttp.putForm("/user/password")
+                .setDomainToauthIfAbsent()
+                .addHeader("Authorization",Token.token)
+                .add("oldPassword",oldPassword)
+                .add("newPassword",newPassword)
+                .setSync()
+                .asClass(BaseRD.class)
+                .subscribe(baseRD -> {
+                    Log.d(TAG, "code: " + baseRD.getMsg());
+                    if (baseRD.getCode() == 200){
+                        result.set(true);
+                        Log.d(TAG, "UpdatePassword: 成功查询！");
+                    }
+                    else {
+                        result.set(false);
+                        Log.d(TAG, "UpdatePassword 出现问题");
+                        Log.d(TAG, "UpdatePassword: code --> " + baseRD.getCode());
+                    }
+                },throwable -> {
+                    Log.d("UpdatePassword", "修改密码失败" + throwable);
+                });
+        return result.get();
+    }
+
+    @Override
+    public Boolean UpdateUsername(String newName) {
+        AtomicBoolean result = new AtomicBoolean();
+        RxHttp.putForm("/user/username/" + newName)
+                .setDomainToauthIfAbsent()
+                .addHeader("Authorization",Token.token)
+                .setSync()
+                .asClass(BaseRD.class)
+                .subscribe(baseRD -> {
+                    Log.d(TAG, "code: " + baseRD.getMsg());
+                    if (baseRD.getCode() == 200){
+                        result.set(true);
+                        Log.d(TAG, "UpdatePassword: 成功查询！");
+                    }
+                    else {
+                        result.set(false);
+                        Log.d(TAG, "UpdatePassword 出现问题");
+                        Log.d(TAG, "UpdatePassword: code --> " + baseRD.getCode());
+                    }
+                },throwable -> {
+                    Log.d(TAG, "修改用户名失败" + throwable);
+                });
+        return result.get();
     }
 
 

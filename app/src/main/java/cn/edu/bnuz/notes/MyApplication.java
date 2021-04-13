@@ -75,7 +75,7 @@ public class MyApplication extends Application {
     public void onCreate() {
         super.onCreate();
         initRxHttpCache(this);
-        NoteCache.initDiskCache(this);
+//        NoteCache.initDiskCache(this);
         DatabaseHelper databaseHelper = new DatabaseHelper(this);
         databaseHelper.getWritableDatabase();
 //        if (NetCheck()) {

@@ -16,25 +16,15 @@ import butterknife.Unbinder;
 import cn.edu.bnuz.notes.MainActivity;
 import cn.edu.bnuz.notes.R;
 import cn.edu.bnuz.notes.login_register.Login;
-import cn.edu.bnuz.notes.websocket.MyWebSocketClientService;
-import cn.edu.bnuz.notes.websocket.UserCenter;
+import cn.edu.bnuz.notes.user_center.UserCenter;
 
 import com.qmuiteam.qmui.widget.dialog.QMUIDialog;
 import com.qmuiteam.qmui.widget.dialog.QMUIDialogAction;
-import com.qmuiteam.qmui.widget.grouplist.QMUICommonListItemView;
-
-import org.w3c.dom.Text;
-
-import java.time.Instant;
-
-import static cn.edu.bnuz.notes.MyApplication.myWebSocketClient;
 
 public class UserFragment  extends Fragment{
     private static final String ARG_SHOW_TEXT = "text";
     private String mContentText;
     private Unbinder unbinder;
-    @BindView(R.id.user_notes)
-    QMUICommonListItemView userNotesCommonListView;
     @BindView(R.id.user_come)
     ImageButton userCome;
     @BindView(R.id.btn_quit)
@@ -55,8 +45,6 @@ public class UserFragment  extends Fragment{
         return rootView;
     }
     private void initView() {
-        userNotesCommonListView.setText("我的笔记");
-        userNotesCommonListView.showNewTip(true);
         userName.setText("nmm");
         userCome.setOnClickListener(new View.OnClickListener() {
             @Override
