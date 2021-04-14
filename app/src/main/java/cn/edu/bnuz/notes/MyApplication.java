@@ -63,7 +63,8 @@ public class MyApplication extends Application {
      * maximumPoolSize：指定了线程池中的最大线程数量，这个参数会根据你使用的workQueue任务队列的类型，决定线程池会开辟的最大线程数量；
      * keepAliveTime：当线程池中空闲线程数量超过corePoolSize时，多余的线程会在多长时间内被销毁；
      * TimeUnit：时间单位
-     *
+     * LinkedBlockingQueue:无界队列（严格来说并非无界，上限是Integer.MAX_VALUE），基于链表结构。使用无界队列后，当核心线程都繁忙时，后续任务可以无限加入队列，
+     *                     因此线程池中线程数不会超过核心线程数。这种队列可以提高线程池吞吐量.使用它时也可以指定容量，这样它也就是一种有界队列了。
      */
     public static final ThreadPoolExecutor threadExecutor = new ThreadPoolExecutor( 3, 4,  30,
             TimeUnit.SECONDS,new LinkedBlockingQueue<Runnable>(10)

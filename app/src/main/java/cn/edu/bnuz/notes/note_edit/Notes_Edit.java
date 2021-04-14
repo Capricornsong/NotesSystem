@@ -209,8 +209,11 @@ public class Notes_Edit extends Activity {
                                 //上传新建文件
 //                                uploadNewNote(note,doc);
                                 if (text != null && text.length() > 0) {
+                                    String [] result = text.toString().split(",");
+                                    for(int i =0;i < result.length; i++){
+                                        uploadNewNotewithTag(note,doc,text.toString());
+                                    }
                                     Toast.makeText(Notes_Edit.this, "您的TAG为: " + text, Toast.LENGTH_SHORT).show();
-                                    uploadNewNotewithTag(note,doc,text.toString());
                                     dialog.dismiss();
                                     finish();
                                 } else {

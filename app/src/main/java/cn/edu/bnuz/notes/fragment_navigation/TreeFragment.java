@@ -43,9 +43,9 @@ public class TreeFragment  extends Fragment{
     private int[] tree_xnum = new int[100];
     private DrawGeometryView view;
 //    private String[] tree="[{startNodeName='人工智能', startNode_id=1, sim=0.6784384769251408, endNodeName='知识', endNode_id=3}, {startNodeName='人工智能', startNode_id=1, sim=0.1, endNodeName='软件', endNode_id=2}, {startNodeName='人工智能', startNode_id=1, sim=0.5, endNodeName='人工智能', endNode_id=1}, {startNodeName='软件', startNode_id=2, sim=0.1, endNodeName='人工智能', endNode_id=1}, {startNodeName='软件', startNode_id=2, sim=0.1, endNodeName='人工智能', endNode_id=1}, {startNodeName='知识', startNode_id=3, sim=0.1, endNodeName='软件', endNode_id=2}, {startNodeName='知识', startNode_id=3, sim=0.6784384769251408, endNodeName='人工智能', endNode_id=1}, {startNodeName='人工智能', startNode_id=4, sim=0.5, endNodeName='人工智能', endNode_id=1}{startNodeName='人工智能', startNode_id=4, sim=0.5, endNodeName='知识', endNode_id=3}, {startNodeName='人工智能', startNode_id=4, sim=0.5, endNodeName='知识', endNode_id=3}, {startNodeName='人工智能', startNode_id=4, sim=0.5, endNodeName='知识', endNode_id=3}, {startNodeName='苦难', startNode_id=5, sim=0.22524722217121346, endNodeName='人工智能', endNode_id=4}, {startNodeName='苦难', startNode_id=5, sim=0.22524722217121346, endNodeName='知识', endNode_id=3}, {startNodeName='苦难', startNode_id=5, sim=0.22524722217121346, endNodeName='人工智能', endNode_id=1}, {startNodeName='茶', startNode_id=6, sim=0.4121244903945665, endNodeName='软件', endNode_id=2}]"
-    private Button[] bt = new Button[15];
-    private RelativeLayout.LayoutParams[] layoutParams = new RelativeLayout.LayoutParams[15];
-    private RelativeLayout.LayoutParams[] layoutParams1 = new RelativeLayout.LayoutParams[15];
+    private Button[] bt = new Button[30];
+    private RelativeLayout.LayoutParams[] layoutParams = new RelativeLayout.LayoutParams[30];
+    private RelativeLayout.LayoutParams[] layoutParams1 = new RelativeLayout.LayoutParams[30];
     private Mystack mstack = new Mystack();
     private boolean model = true;
     private int bt_width = 300;

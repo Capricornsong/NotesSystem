@@ -19,4 +19,6 @@ public class Url {
     public static String internal = "http://120.76.128.222:8004/file/";
     @Domain(name = "auth") //非默认域名
     public static String auth = "http://120.76.128.222:8004/auth/";
+    //websocket测试地址
+    public static final String ws = "ws://echo.websocket.org";
 }

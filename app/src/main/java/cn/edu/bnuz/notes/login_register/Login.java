@@ -111,7 +111,7 @@ public class Login extends Activity {
         find_psw.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent i=new Intent(Login.this, ParseHtml1.class);
+//                Intent i=new Intent(Login.this, ParseHtml1.class);
 //                startActivity(i);
             }
         });

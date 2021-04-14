@@ -27,6 +27,7 @@ import java.net.URI;
 import cn.edu.bnuz.notes.MainActivity;
 import cn.edu.bnuz.notes.R;
 import cn.edu.bnuz.notes.constants;
+import cn.edu.bnuz.notes.pojo.Url;
 
 import static androidx.core.app.NotificationCompat.VISIBILITY_PUBLIC;
 import static cn.edu.bnuz.notes.constants.CHANNEL_ID;
@@ -126,7 +127,7 @@ public class MyWebSocketClientService extends Service {
      * 初始化websocket连接
      */
     private void initSocketClient() {
-        URI uri = URI.create(constants.ws);
+        URI uri = URI.create(Url.ws);
         client = new MyWebSocketClient(uri) {
             @Override
             public void onMessage(String message) {
@@ -135,6 +136,7 @@ public class MyWebSocketClientService extends Service {
                 intent.setAction("cn.edu.bnuz.notes.websocket");
                 intent.putExtra("message", message);
                 sendBroadcast(intent);
+                checkLockAndShowNotification(message);
                 //检查通知
                 checkLockAndShowNotification(message);
             }
