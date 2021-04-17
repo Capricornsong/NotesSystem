@@ -16,10 +16,13 @@ import butterknife.Unbinder;
 import cn.edu.bnuz.notes.MainActivity;
 import cn.edu.bnuz.notes.R;
 import cn.edu.bnuz.notes.login_register.Login;
+import cn.edu.bnuz.notes.ntwpojo.UserInfo;
 import cn.edu.bnuz.notes.user_center.UserCenter;
 
 import com.qmuiteam.qmui.widget.dialog.QMUIDialog;
 import com.qmuiteam.qmui.widget.dialog.QMUIDialogAction;
+
+import static cn.edu.bnuz.notes.pojo.Token.UserInf;
 
 public class UserFragment  extends Fragment{
     private static final String ARG_SHOW_TEXT = "text";
@@ -45,7 +48,7 @@ public class UserFragment  extends Fragment{
         return rootView;
     }
     private void initView() {
-        userName.setText("nmm");
+        userName.setText(UserInf.get("username").toString().replace("\"",""));
         userCome.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

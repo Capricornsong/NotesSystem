@@ -23,16 +23,7 @@ public class TreeControllerImpl extends Binder implements ITreeController {
 
 
     public TreeControllerImpl(){
-        //设置全局请求头
-//        setOnParamAssembly(new Function<Param<?>, Param<?>>() {
-//            @Override
-//            public Param apply(Param param) throws Exception {
-//                Method method = param.getMethod();
-//                return param.addHeader("Authorization", Token.token);
-//            }
-//        });
         Log.d(TAG, "NoteControllerImpl: 初始化。。");
-
     }
 
     @Override

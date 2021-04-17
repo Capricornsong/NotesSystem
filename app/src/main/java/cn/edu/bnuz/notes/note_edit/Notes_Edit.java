@@ -188,7 +188,6 @@ public class Notes_Edit extends Activity {
                                 uploadNewNote(note,doc);
                                 finish();
                             }
-
                         })
                         .addAction("确定", new QMUIDialogAction.ActionListener() {
                             @Override
@@ -222,8 +221,6 @@ public class Notes_Edit extends Activity {
                             }
                         })
                         .create(R.style.QMUI_Dialog).show();
-
-//                mEditor.setHtml("11111114<img src=\"/storage/emulated/0/Download/create.png\" alt=\"/storage/emulated/0/Download/create.png\" style=\"max-width:75%\">");
             }
         });
         NotesTopBar.setTitle("编辑笔记");
@@ -412,7 +409,6 @@ public class Notes_Edit extends Activity {
                                 return false;
                             }
                         }).show();
-
             }
         });
         //向右缩进
@@ -562,11 +558,9 @@ public class Notes_Edit extends Activity {
         Log.d(TAG, "uploadNewNote: imgsize" + imgsize);
         Log.d(TAG, "uploadNewNote: videosize" + videosize);
 
-
         threadExecutor.execute(new Runnable() {
             @Override
             public void run() {
-//                Looper.prepare();
                 long result = mNoteController.CreateNote(note);
                 Log.d(TAG, "run: 新建笔记结果码：:" + result);
                 if (result > 9999999) {
@@ -640,10 +634,6 @@ public class Notes_Edit extends Activity {
                     });
 
                 }
-
-
-
-//                Looper.loop();
             }
         });
     }

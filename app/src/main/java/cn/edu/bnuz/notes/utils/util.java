@@ -48,25 +48,12 @@ public class util {
     //检查网络状态
     public static boolean NetCheck(){
         if (mNetworkInfo != null && mNetworkInfo.isAvailable()){
-//            Toast.makeText(context,"网络已连接",Toast.LENGTH_LONG).show();
             return true;
         }
         else{
-//            Toast.makeText(context,"网络已断开",Toast.LENGTH_LONG).show();
             return false;
         }
 
-    }
-
-    public static void ShareControllerImpl(){
-        setOnParamAssembly(new Function<Param<?>, Param<?>>() {
-            @Override
-            public Param apply(Param param) throws Exception {
-                Method method = param.getMethod();
-                return param.addHeader("Authorization", Token.token);
-            }
-        });
-        Log.d(TAG, "NoteControllerImpl: 初始化。。");
     }
 
     /**
@@ -90,6 +77,9 @@ public class util {
         return true;
     }
 
+    /**
+     * 通过Token获取用户信息
+     */
     public static void gainUserId() {
         Log.d(TAG, "gainUserId: token");
         Claims claims = null;

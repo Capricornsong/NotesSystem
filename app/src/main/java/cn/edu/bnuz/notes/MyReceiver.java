@@ -16,6 +16,7 @@ import org.litepal.LitePal;
 
 import java.util.List;
 import cn.edu.bnuz.notes.pojo.Token;
+import cn.edu.bnuz.notes.websocket.MyWebSocketClientService;
 import rxhttp.RxHttp;
 
 import static cn.edu.bnuz.notes.MyApplication.mNoteController;
@@ -38,6 +39,7 @@ public class MyReceiver extends BroadcastReceiver {
         }
         else if (mNetworkInfo != null && mNetworkInfo.isAvailable() && !Token.token.equals("")){
             Toast.makeText(context,"网络已连接,正在尝试同步笔记",Toast.LENGTH_LONG).show();
+            startMyWebSClientServiceInReceiver();
             //上传本地数据库中未上传的笔记
             SynNote();
         }
@@ -46,6 +48,10 @@ public class MyReceiver extends BroadcastReceiver {
             //上传本地数据库中未上传的笔记
 
         }
+    }
+
+    private void startMyWebSClientServiceInReceiver() {
+        
     }
 
     public void SynNote(){

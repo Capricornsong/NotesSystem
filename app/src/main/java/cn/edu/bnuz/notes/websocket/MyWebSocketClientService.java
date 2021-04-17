@@ -9,7 +9,6 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Binder;
 import android.os.Build;
@@ -26,7 +25,6 @@ import java.net.URI;
 
 import cn.edu.bnuz.notes.MainActivity;
 import cn.edu.bnuz.notes.R;
-import cn.edu.bnuz.notes.constants;
 import cn.edu.bnuz.notes.pojo.Url;
 
 import static androidx.core.app.NotificationCompat.VISIBILITY_PUBLIC;
@@ -127,7 +125,7 @@ public class MyWebSocketClientService extends Service {
      * 初始化websocket连接
      */
     private void initSocketClient() {
-        URI uri = URI.create(Url.ws);
+        URI uri = URI.create(Url.wsTest);
         client = new MyWebSocketClient(uri) {
             @Override
             public void onMessage(String message) {

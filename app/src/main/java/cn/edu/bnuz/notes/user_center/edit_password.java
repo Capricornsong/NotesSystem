@@ -80,7 +80,6 @@ public class edit_password extends Activity {
                                 }
                             });
                         }
-
                     }
                 });
             }

@@ -77,8 +77,7 @@ public class NotesFragment extends Fragment {
     private List<GetFilesbyNoteId.DataBean> mFileList = new ArrayList<>();
     private List<NotesbyPageorTagIdRD.NotesPkg.Notes> filterList = new ArrayList<>();
     private List<Note> mNotelist = new ArrayList<>();       //用于存储从本地获取的笔记
-    List<NotesbyPageorTagIdRD.NotesPkg.Notes> notesBeanList = new ArrayList<>();
-    int yon=0;//判断是否点击TAG按钮
+    List<NotesbyPageorTagIdRD.NotesPkg.Notes> notesBeanList = new ArrayList<>();        //用与存储根据标签筛选出来的笔记
     public NotesFragment() {
         // Required empty public constructor
     }
@@ -121,20 +120,20 @@ public class NotesFragment extends Fragment {
 
     private void initView() {
         List<NotesbyPageorTagIdRD.NotesPkg.Notes> Lnotes=new ArrayList<>();
-        List<NotesbyPageorTagIdRD.NotesPkg.Notes> Lnotes1=new ArrayList<>();
         mFilespPath.clear();
         mNotelist.clear();
         mNotelist.addAll(LitePal.where("isDelete == ? and userId = ?","0",UserInf.get("userId").toString()).find(Note.class));
         mNote = new Note();
-        if(yon==0)
-        {
-            Lnotes1.clear();
-            notesBeanList.clear();
-        }
-        if(yon==1) {
-            Lnotes1.addAll(notesBeanList);
-            mNotesAdapter = new NotesAdapter(getContext(),R.layout.simple_list_item,Lnotes1);
+//        if(yon==0)
+//        {
+//            Lnotes.clear();
+//            notesBeanList.clear();
+//        }
+        if(!notesBeanList.isEmpty()) {
+            Lnotes.addAll(notesBeanList);
+            mNotesAdapter = new NotesAdapter(getContext(),R.layout.simple_list_item,Lnotes);
             mListView_contact.setAdapter(mNotesAdapter);
+            notesBeanList.clear();
         }
         else
             {
@@ -146,7 +145,6 @@ public class NotesFragment extends Fragment {
                     public void run() {
                         //过去笔记列表
                         NotesbyPageorTagIdRD.NotesPkg notesPkg = mNoteController.GetNotesbyPage();
-                        Log.d(TAG, "run: ///////////////////");
                         Lnotes.addAll(notesPkg.getNotes());
                     }
                 });
@@ -170,11 +168,11 @@ public class NotesFragment extends Fragment {
                 mListView_contact.setAdapter(mNotesAdapter);
             }
         }
-        yon=0;
+        notesBeanList.clear();
         Log.d(TAG, "initView: -*----------------------");
         mListView_contact.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
-            /**+
+            /**
              * Item 点击方法
              * @param adapterView
              * @param view
@@ -183,6 +181,7 @@ public class NotesFragment extends Fragment {
              */
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                Log.d(TAG, "onItemClick: i:" + i);
                 mFilespPath.clear();
                 mFileList.clear();
                 index = i;
@@ -191,6 +190,7 @@ public class NotesFragment extends Fragment {
                 CountDownLatch countDownLatch1 = new CountDownLatch(1);
 
                 Bundle bundle = new Bundle();
+                Log.d(TAG, "run: Lnotes.size:" + Lnotes.size());
 
                 /*
                  *有网络时，点击item显示的从云端的笔记，点击返回按钮时才会将查看过的那篇笔记缓存到本地。
@@ -330,7 +330,6 @@ public class NotesFragment extends Fragment {
                 builder.addAction("确定", new QMUIDialogAction.ActionListener() {
                     @Override
                     public void onClick(QMUIDialog dialog, int index) {
-                        yon=1;
                         CountDownLatch countDownLatch2 = new CountDownLatch(1);
                         if (builder.getCheckedItemIndexes().length != 0) {
                             ArrayList<String> selectedTags = new ArrayList<>();
@@ -343,6 +342,8 @@ public class NotesFragment extends Fragment {
                                 public void run() {
                                     NotesbyPageorTagIdRD.NotesPkg notesPkg = mNoteController.GetNotesbyTags(selectedTags,1,50);
                                     Log.d(TAG, "run: datesize" + notesPkg.getNotes().size());
+                                    notesBeanList.clear();
+
                                     notesBeanList.addAll(notesPkg.getNotes());
                                     countDownLatch2.countDown();
                                 }
@@ -359,13 +360,6 @@ public class NotesFragment extends Fragment {
                         else {
                             Toast.makeText(getContext(), "请选择", Toast.LENGTH_SHORT).show();
                         }
-
-//                        String result = "你选择了 ";
-//                        for (int i = 0; i < builder.getCheckedItemIndexes().length; i++) {
-//                            result += "" + ++builder.getCheckedItemIndexes()[i] + "; ";
-//                        }
-//                        Toast.makeText(MainActivity.this, result, Toast.LENGTH_SHORT).show();
-
                     }
                 });
                 builder.show();

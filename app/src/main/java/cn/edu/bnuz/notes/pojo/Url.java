@@ -20,5 +20,8 @@ public class Url {
     @Domain(name = "auth") //非默认域名
     public static String auth = "http://120.76.128.222:8004/auth/";
     //websocket测试地址
-    public static final String ws = "ws://echo.websocket.org";
+    public static final String wsTest = "ws://echo.websocket.org";
+    //websocket测试地址
+    public static final String ws = "ws://39.108.195.47:8001/endpoint-websocket";
+
 }

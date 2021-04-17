@@ -93,7 +93,6 @@ public class UserCenter extends Activity {
                                                     Toast.makeText(UserCenter.this,"修改成功",Toast.LENGTH_LONG).show();
                                                 }
                                             });
-
                                         }
                                         else {
                                             mHandler.post(new Runnable() {
@@ -109,7 +108,6 @@ public class UserCenter extends Activity {
                             }
                         })
                         .create(R.style.QMUI_Dialog).show();
-
             }
         });
         edit_password.setOnClickListener(new View.OnClickListener() {

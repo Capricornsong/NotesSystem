@@ -14,8 +14,6 @@ import android.view.View;
  *
  * 自定义的View,绘制线调条
  *
- * @author 邵磊2016年3月22日 14:15:34
- *
  */
 @SuppressLint("DrawAllocation")
 public class DrawGeometryView extends View {

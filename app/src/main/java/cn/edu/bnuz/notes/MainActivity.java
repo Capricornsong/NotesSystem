@@ -45,6 +45,7 @@ import com.qmuiteam.qmui.widget.QMUITopBar;
 import com.qmuiteam.qmui.widget.dialog.QMUIDialog;
 import com.qmuiteam.qmui.widget.dialog.QMUIDialogAction;
 
+import static cn.edu.bnuz.notes.MyApplication.mFileTransConnection;
 import static cn.edu.bnuz.notes.MyApplication.mNoteController;
 import static cn.edu.bnuz.notes.MyApplication.mShareController;
 import static cn.edu.bnuz.notes.MyApplication.mTagController;
@@ -107,7 +108,6 @@ public class MainActivity extends FragmentActivity {
     public void startMyWebSClientService() {
         WebSocketServiceintent = new Intent(this, MyWebSocketClientService.class);
         startService(WebSocketServiceintent);
-
     }
 
     //websocket
@@ -130,8 +130,6 @@ public class MainActivity extends FragmentActivity {
             Log.e("MainActivity", "wesocket服务与活动成功断开");
         }
     };
-
-
 
     //底部导航栏和相关函数
     private void initView() {
@@ -196,7 +194,6 @@ public class MainActivity extends FragmentActivity {
                                         threadExecutor.execute(new Runnable() {
                                             @Override
                                             public void run() {
-
                                                 note = mShareController.GetShare(Long.parseLong(text.toString()));
                                                 countDownLatch.countDown();
                                             }
@@ -239,7 +236,7 @@ public class MainActivity extends FragmentActivity {
         super.onDestroy();
 //        if (mFileTransConnection != null || mTokenConnection != null || mTokenConnection != null || mShareConnection != null || mTagConnection != null || mNoteConnection != null || mFileConnection != null) {
 ////            Log.d(TAG, "onDestroy: unbind service...");
-//            unbindService(mFileTransConnection);
+            unbindService(mFileTransConnection);
 //            unbindService(mTokenConnection);
 //            unbindService(mShareConnection);
 //            unbindService(mTagConnection);

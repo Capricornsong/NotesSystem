@@ -106,12 +106,14 @@ public class NoteControllerImpl extends Binder implements INoteController{
                             }
                             Log.d(TAG, "CreateNote: 成功创建文本笔记！");
                             Log.d(TAG, "CreateNote: content --> " + c.getObject().getGmtModified().toString());
+                            //websocket推送
+                            myWebSClientService.sendMsg("您在网页端新建的标题为“" + note.getTitle() + "”的笔记已通过同步到云端");
                         }
                         else
                             responseCode.set(c.getCode());
 
                     },throwable -> {
-                        Log.d(TAG + "CreateNote", "创建文本笔记失败" + throwable);
+                        Log.d(TAG , "CreateNote 创建文本笔记失败" + throwable);
                     });
 
             return responseCode.get();
@@ -196,6 +198,8 @@ public class NoteControllerImpl extends Binder implements INoteController{
                             }
                             Log.d(TAG, "UpdateNote: 成功修改文本笔记");
                             Log.d(TAG, "UpdateNote: NoteId --> " + c.getObject().getNoteId());
+                            //websocket推送
+                            myWebSClientService.sendMsg("您在网页端更改的标题为“" + note.getTitle() + "”的笔记已同步到云端");
                         }
                         else if (c.getCode() == 3005){
                             System.out.println("修改异常，笔记不存在或已被删除！");
@@ -285,6 +289,8 @@ public class NoteControllerImpl extends Binder implements INoteController{
                         responseCode.set(c.getCode());
                         if (c.getCode() == 200){
                             Log.d(TAG, "DeleteNote: 成功删除文本笔记！");
+                            //websocket推送
+                            myWebSClientService.sendMsg("您已在网页端删除标题为“" + note.getTitle() + "”的笔记");
                         }
                         else {
                             Log.d(TAG, "DeleteNote: code --> " + c.getCode());

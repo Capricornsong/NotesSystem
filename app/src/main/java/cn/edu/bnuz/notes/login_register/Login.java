@@ -93,9 +93,7 @@ public class Login extends Activity {
                                     Toast.makeText(Login.this,"用户名或密码错误",Toast.LENGTH_LONG).show();
                                 }
                             });
-//                            Toast.makeText(Login.this,"用户名或密码错误",Toast.LENGTH_SHORT).show();
                         }
-//                        Looper.loop();
                     }
                 });
             }

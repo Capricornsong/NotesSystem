@@ -64,7 +64,6 @@ public class Register extends Activity {
         setContentView(root);
     }
 
-
     private void initTopBar() {
         mTopBar.addLeftBackImageButton().setOnClickListener(new View.OnClickListener() {
             @Override
@@ -124,10 +123,8 @@ public class Register extends Activity {
                                         Toast.makeText(Register.this,"注册失败",Toast.LENGTH_LONG).show();
                                     }
                                 });
-
                             }
                         }
-//                        Looper.loop();
                     }
                 });
             }
@@ -162,5 +159,4 @@ public class Register extends Activity {
             }
         });
     }
-
 }

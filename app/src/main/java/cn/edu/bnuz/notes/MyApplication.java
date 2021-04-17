@@ -77,8 +77,8 @@ public class MyApplication extends Application {
         super.onCreate();
         initRxHttpCache(this);
 //        NoteCache.initDiskCache(this);
-        DatabaseHelper databaseHelper = new DatabaseHelper(this);
-        databaseHelper.getWritableDatabase();
+//        DatabaseHelper databaseHelper = new DatabaseHelper(this);
+//        databaseHelper.getWritableDatabase();
 //        if (NetCheck()) {
 //            Log.d(TAG, "开启websocket");
 //            //启动websocket服务
