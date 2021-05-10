@@ -78,8 +78,6 @@ public class MainActivity extends FragmentActivity {
     private static final String TAG = "MainActivity";
     private List<Fragment> mFragments;
     private FragmentPagerAdapter mAdapter;
-//    private WebSocketClient client;
-//    private WebSocketClientService.WebSocketClientBinder binder;
     private WebSocketClientService WebSClientService;
     private Note note;
     public static Intent WebSocketServiceintent;

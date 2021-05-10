@@ -33,7 +33,7 @@ public class TokenControllerImpl extends Binder implements ITokenController{
         AtomicInteger result = new AtomicInteger();
         Log.d(TAG, "GetToken: username" + username + " pass:" + password);
         postForm("http://120.76.128.222:8004/auth/oauth/token")
-                .setCacheMode(CacheMode.READ_CACHE_FAILED_REQUEST_NETWORK)  //设置单独的缓存策略为先读取缓存，读取成功，直接返回；否则将请求网络(请求成功，写入缓存)
+                .setCacheMode(CacheMode.REQUEST_NETWORK_FAILED_READ_CACHE)  //设置单独的缓存策略为先请求网络，请求成功，写入缓存并返回；否则读取缓存.
                 .setCacheValidTime(6000 * 1000) //当前请求缓存有效期为6000秒
                 .setSync()
                 .add("client_id","android")

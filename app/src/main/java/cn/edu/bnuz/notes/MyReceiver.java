@@ -99,8 +99,8 @@ public class MyReceiver extends BroadcastReceiver {
                     .subscribe(c -> {
                         Log.d("NoteController", "code: " + c.getCode());
                         if (c.getCode() == 200){
-                            Log.d(TAG, "CreateNote: 成功创建文本笔记！");
-                            Log.d(TAG, "CreateNote: content --> " + c.getObject().getGmtModified().toString());
+                            Log.d(TAG, "uploadNotes: 成功同步文本笔记！");
+                            Log.d(TAG, "uploadNotes: GmtModified --> " + c.getObject().getGmtModified().toString());
 
                             Note updateNews = new Note();
                             //表示已经同步
@@ -111,7 +111,7 @@ public class MyReceiver extends BroadcastReceiver {
                             updateNews.setVersion(c.getObject().getVersion());
 //                            updateNews.setGmt_create(c.getObject().getGmtModified());
                             //用上传成功的返回值更新本地的笔记
-                            updateNews.updateAll("IsSyn = ? and content = ?","0",Long.toString(c.getObject().getNoteId()));
+                            updateNews.updateAll("IsSyn = ? and content = ?","0",c.getObject().getContent());
                         }
                     },throwable -> {
                         Log.d(TAG + "uploadNotes", "创建文本笔记失败" + throwable);

@@ -57,7 +57,6 @@ public class MyWebSocketClientService extends Service {
         initSocketClient();
         mHandler.postDelayed(heartBeatRunnable, HEART_BEAT_RATE);//开启心跳检测
 
-
         PendingIntent pendingIntent = PendingIntent.getActivity(this,0, intent, 0);
         Notification notification = new NotificationCompat.Builder(this,CHANNEL_ID).
                 setContentTitle("笔记推送服务").
@@ -87,6 +86,9 @@ public class MyWebSocketClientService extends Service {
         }
 
         acquireWakeLock();
+
+        //保活
+        // START_STICKY表示如果Service进程被kill掉，系统会尝试重新创建Service。
         return START_STICKY;
     }
 
@@ -105,6 +107,8 @@ public class MyWebSocketClientService extends Service {
             return null;
         }
     }
+
+
     PowerManager.WakeLock wakeLock;//锁屏唤醒
     //获取电源锁，保持该服务在屏幕熄灭时仍然获取CPU时，保持运行
     @SuppressLint("InvalidWakeLockTag")
@@ -113,7 +117,7 @@ public class MyWebSocketClientService extends Service {
         if (null == wakeLock)
         {
             PowerManager pm = (PowerManager)this.getSystemService(Context.POWER_SERVICE);
-            wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK|PowerManager.ON_AFTER_RELEASE, "PostLocationService");
+            wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK|PowerManager.ON_AFTER_RELEASE, "WakeLock锁");
             if (null != wakeLock)
             {
                 wakeLock.acquire();

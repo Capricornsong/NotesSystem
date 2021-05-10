@@ -21,7 +21,7 @@ public class Url {
     public static String auth = "http://120.76.128.222:8004/auth/";
     //websocket测试地址
     public static final String wsTest = "ws://echo.websocket.org";
-    //websocket测试地址
+    //websocket地址（不可用)
     public static final String ws = "ws://39.108.195.47:8001/endpoint-websocket";
 
 }

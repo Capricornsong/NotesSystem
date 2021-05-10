@@ -277,7 +277,7 @@ public class NoteControllerImpl extends Binder implements INoteController{
     @Override
     public long DeleteNote(long noteid) {
         Note note = new Note();
-        note.setDelete(1);
+        note.setIsDelete(1);
         note.updateAll("noteId = ?",Long.toString(noteid));
         if (NetCheck()){
             //准备需要删除的笔记(只需要note_id)
@@ -289,6 +289,7 @@ public class NoteControllerImpl extends Binder implements INoteController{
                         responseCode.set(c.getCode());
                         if (c.getCode() == 200){
                             Log.d(TAG, "DeleteNote: 成功删除文本笔记！");
+
                             //websocket推送
                             myWebSClientService.sendMsg("您已在网页端删除标题为“" + note.getTitle() + "”的笔记");
                         }
@@ -302,7 +303,6 @@ public class NoteControllerImpl extends Binder implements INoteController{
         else{
             Log.d(TAG, "DeleteNote: 本地逻辑删除");
             Log.d(TAG, "DeleteNote: noteid" + Long.toString(noteid));
-            note.setDelete(1);
             note.setIsDelete(1);
             note.updateAll("noteId = ?",Long.toString(noteid));
             return 201;
